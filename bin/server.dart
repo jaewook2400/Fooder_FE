@@ -2,13 +2,32 @@ import 'package:fooder_fe/local_database.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:postgres/postgres.dart';
 
 /// 간단한 메모리 유저 저장소 (회원가입/로그인 토큰용)
 final Map<String, String> _userPasswords = {}; // username -> password
 
 Future<void> main() async {
+
+  final conn = await Connection.open(Endpoint
+    (
+      host: 'localhost',
+      port: 5432,
+      database: 'fooder_app',
+      username: 'postgres',
+      password: '5632',
+    ),
+    settings: const ConnectionSettings(sslMode: SslMode.disable),
+  );
+  print("-----PostgreSQL connected!-----");
+
+  final result = await conn.execute(
+    Sql.named('SELECT * FROM users'),
+  );
+  print(result.first.toColumnMap());
+
   final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 8080, shared: true);
-  print('✅ Server running on http://${server.address.host}:${server.port}');
+  print('-----Server running on http://${server.address.host}:${server.port}-----');
 
   await for (final request in server){
     // 공통 헤더 (JSON & CORS)
@@ -19,14 +38,14 @@ Future<void> main() async {
       final path = request.uri.path; // e.g., /api/recipe/3/like
       final segments = request.uri.pathSegments; // [api, recipe, 3, like]
 
-      // ✅ 로그용 기본 정보
+      // 로그용 기본 정보
       final startedAt = DateTime.now();
       final ip = request.connectionInfo?.remoteAddress.address ?? '-';
       final query = request.uri.query.isNotEmpty ? '?${request.uri.query}' : '';
       final authHeaderForLog = request.headers.value(HttpHeaders.authorizationHeader);
       final userForLog = _extractUserFromAuth(authHeaderForLog);
 
-// ✅ 응답이 끝난 직후(status 확정) 예쁘게 한 줄 로그
+// 응답이 끝난 직후(status 확정) 예쁘게 한 줄 로그
       request.response.done.then((_) async {
         final elapsed = DateTime.now().difference(startedAt).inMilliseconds;
         final status = request.response.statusCode;
@@ -266,7 +285,7 @@ Future<void> main() async {
         // recordedRecipe는 List<Map<String, dynamic>>
         final list = (profile['recordedRecipe'] as List).cast<Map<String, dynamic>>();
 
-        // ✅ recipeId가 같은 recordedRecipe만 삭제
+        // recipeId가 같은 recordedRecipe만 삭제
         list.removeWhere((recipe) => recipe['recipeId'] == id);
 
         _okJson(request, {'message': 'record deleted', 'recipeId': id});
@@ -325,7 +344,7 @@ Future<void> main() async {
       // --------------- 기본 404 ---------------
       return _notFound(request, 'Endpoint not found: $method $path');
     } catch (e, st) {
-      print('❌ Error: $e\n$st');
+      print('=====Error: $e\n$st=====');
       _serverError(request, 'internal error');
     }
   }
@@ -334,11 +353,11 @@ Future<void> main() async {
 // ----------------- 유틸 -----------------
 
 String _statusMark(int status) {
-  if (status >= 500) return '💥';
-  if (status >= 400) return '⚠️';
-  if (status >= 300) return '🔀';
-  if (status >= 200) return '✅';
-  return 'ℹ️';
+  if (status >= 500) return '=====';
+  if (status >= 400) return '====';
+  if (status >= 300) return '===';
+  if (status >= 200) return '---';
+  return '-';
 }
 
 void _printAccessLog({
@@ -351,8 +370,8 @@ void _printAccessLog({
 }){
   final mark = _statusMark(status);
   final m = method.padRight(6); // GET/POST 정렬
-  // 예: ✅ 200  12ms  GET   /api/recipe/1       👤 user1   🌐 127.0.0.1
-  print('$mark $status  ${ms}ms  $m $path   👤 $user   🌐 $ip');
+  // 예: 200  12ms  GET   /api/recipe/1        user1    127.0.0.1
+  print('$mark $status  ${ms}ms  $m $path    $user    $ip');
 }
 
 String _extractUserFromAuth(String? authHeader) {
@@ -418,7 +437,7 @@ void _applyCommonHeaders(HttpResponse res) {
 
 Future<Map<String, dynamic>> _readJson(HttpRequest req) async {
   final text = await utf8.decoder.bind(req).join();
-  print("📥 BODY: $text");
+  print("-----BODY: $text-----");
   final data = jsonDecode(text);
   if (data is Map<String, dynamic>) return data;
   throw const FormatException('JSON object required');
