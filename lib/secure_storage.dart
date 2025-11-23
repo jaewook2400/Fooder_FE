@@ -1,25 +1,22 @@
-import 'dart:io';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureStorage {
   SecureStorage._internal();
   static final SecureStorage _instance = SecureStorage._internal();
   factory SecureStorage() => _instance;
 
-  String? _token;
-
-  final _file = File('token.txt');
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  static const _key = "access_token";
 
   Future<void> saveAccessToken(String token) async {
-    _token = token;
-    await _file.writeAsString(token);
+    await _storage.write(key: _key, value: token);
   }
 
   Future<String?> getAccessToken() async {
-    if (_token != null) return _token;
-    if (await _file.exists()) {
-      _token = await _file.readAsString();
-      return _token;
-    }
-    return null;
+    return await _storage.read(key: _key);
+  }
+
+  Future<void> clearToken() async {
+    await _storage.delete(key: _key);
   }
 }
