@@ -131,6 +131,20 @@ class ApiService {
     return jsonDecode(res.body);
   }
 
+  static Future<List<dynamic>> getRecordedRecipes() async {
+    final res = await http.get(
+      Uri.parse("$baseUrl/api/record/recipe"),
+      headers: await _headers(),
+    );
+
+    final json = jsonDecode(res.body);
+    return json["recipes"] as List<dynamic>;
+  }
+
+
+
+  //-----디버그용-----
+
   static Future<int> getRecipeCount() async {
     final res = await http.get(
       Uri.parse("$baseUrl/api/debug/recipe-count"),

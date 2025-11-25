@@ -567,13 +567,78 @@ Future<void> main() async {
 
       // GET /api/record/recipe  (기록된 레시피)
       if (method == 'GET' && path == '/api/record/recipe') {
-        final profile = userInfo.putIfAbsent(user, () => {
-          'likedRecipeId': <int>[],
-          'recordedRecipe': <Map<String, dynamic>>[],
-        });
+        // 1) username → user_id 조회
+        final userRow = await conn.execute(
+          Sql.named('SELECT user_id FROM users WHERE username = @u'),
+          parameters: {'u': user},
+        );
 
-        final list = (profile['recordedRecipe'] as List).cast<Map<String, dynamic>>();
-        _okJson(request, {'recipes': list, 'count': list.length});
+        if (userRow.isEmpty) return _unauthorized(request, 'user not found');
+        final userId = userRow.first[0] as int;
+
+        // 2) recorded된 recipe_id 목록 가져오기
+        final recordedRows = await conn.execute(
+          Sql.named('''
+      SELECT recipe_id
+      FROM user_recorded_recipes
+      WHERE user_id = @uid
+    '''),
+          parameters: {'uid': userId},
+        );
+
+        if (recordedRows.isEmpty) {
+          _okJson(request, {'recipes': [], 'count': 0});
+          continue;
+        }
+
+        final recordedIds = recordedRows.map((r) => r[0] as int).toList();
+
+        // 3) recipe 상세 JOIN해서 가져오기
+        final recipesRows = await conn.execute(
+          Sql.named('''
+      SELECT r.recipe_id, r.name, r.time_to_cook, r.description, r.image_url
+      FROM recipes r
+      WHERE r.recipe_id = ANY(@ids)
+    '''),
+          parameters: {'ids': recordedIds},
+        );
+
+        // 4) 재료 목록 가져오기
+        final ingredientRows = await conn.execute(
+          Sql.named('''
+      SELECT recipe_id, ingredient
+      FROM recipe_ingredients
+      WHERE recipe_id = ANY(@ids)
+      ORDER BY recipe_id
+    '''),
+          parameters: {'ids': recordedIds},
+        );
+
+        // recipe_id → ingredient 리스트 맵핑
+        final ingredientMap = <int, List<String>>{};
+        for (final row in ingredientRows) {
+          final rid = row[0] as int;
+          final ing = row[1] as String;
+          ingredientMap.putIfAbsent(rid, () => []).add(ing);
+        }
+
+        // ★ 최종 응답으로 묶기
+        final result = [];
+
+        for (final row in recipesRows) {
+          final map = row.toColumnMap();
+
+          result.add({
+            'recipeId': map['recipe_id'],
+            'name': map['name'],
+            'timeToCook': map['time_to_cook'],
+            'description': map['description'],
+            'imageUrl': map['image_url'],
+            'ingredients': ingredientMap[map['recipe_id']] ?? [],
+          });
+        }
+
+        _okJson(request, {'recipes': result, 'count': result.length});
         continue;
       }
 
