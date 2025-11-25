@@ -35,7 +35,7 @@ class _ApiTestWidgetState extends State<ApiTestWidget> {
   }
 
   void testFlow() async {
-    writeLog("📌 시작");
+    writeLog("----시작----");
 
     final register = await ApiService.register("user1", "pass1");
     writeLog("회원가입: $register");

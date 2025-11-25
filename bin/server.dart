@@ -86,16 +86,30 @@ Future<void> main() async {
         if (username.isEmpty || password.isEmpty) {
           return _badRequest(request, 'username/password required');
         }
-        if (_userPasswords.containsKey(username)) {
+
+        //1. username 중복 체크
+        final check = await conn.execute(
+          Sql.named('SELECT user_id FROM users WHERE username = @u'),
+          parameters: {'u': username},
+        );
+
+        if (check.isNotEmpty) {
           return _badRequest(request, 'already registered');
         }
 
-        _userPasswords[username] = password;
-        // userInfo에도 기본 구조 생성
-        userInfo.putIfAbsent(username, () => {
-          'likedRecipeId': <int>[],
-          'recordedRecipe': <Map<String, dynamic>>[],
-        });
+        //2. 회원정보 저장
+        await conn.execute(
+          Sql.named('''
+          INSERT INTO users (username, password_hash)
+          VALUES (@u, @p)
+        '''),
+          parameters: {
+            'u': username,
+            'p': password,  // 나중에 bcrypt로 바꾸면 좋음
+          },
+        );
+
+        print('----- User registered: $username -----');
 
         _okJson(request, {
           'message': 'registered',
