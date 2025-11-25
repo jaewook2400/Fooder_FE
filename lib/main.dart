@@ -35,34 +35,43 @@ class _ApiTestWidgetState extends State<ApiTestWidget> {
   }
 
   void testFlow() async {
-    writeLog("---- unlike 테스트 시작 ----");
+    writeLog("---- 좋아요 목록 테스트 시작 ----");
 
     // 1) 로그인
     final login = await ApiService.login("user1", "pass1");
     writeLog("로그인: $login");
 
     // 2) 전체 레시피
-    final recipes = await ApiService.getRecipes();
-    writeLog("레시피 개수: ${recipes.length}");
+    final allRecipes = await ApiService.getRecipes();
+    writeLog("전체 레시피 수: ${allRecipes.length}");
 
-    if (recipes.isEmpty) {
+    if (allRecipes.isEmpty) {
       writeLog("레시피 없음 → 테스트 종료");
       return;
     }
 
-    final targetId = recipes.first["recipeId"];
-    writeLog("테스트용 레시피 ID: $targetId");
+    final firstId = allRecipes.first["recipeId"];
+    writeLog("테스트용 레시피 ID: $firstId");
 
-    // // 3) 좋아요
-    // final likeRes = await ApiService.likeRecipe(targetId);
-    // writeLog("좋아요: $likeRes");
+    // 3) 좋아요 추가
+    final liked = await ApiService.likeRecipe(firstId);
+    writeLog("좋아요 결과: $liked");
 
-    // 4) 좋아요 취소
-    final unlikeRes = await ApiService.unlikeRecipe(targetId);
-    writeLog("좋아요 취소: $unlikeRes");
+    // 4) 좋아요 목록 조회
+    final likedList = await ApiService.getLikedRecipes();
+    writeLog("좋아요한 레시피 목록: $likedList");
 
-    writeLog("🎉 unlike 테스트 완료");
+    // 5) 좋아요 취소
+    final unliked = await ApiService.unlikeRecipe(firstId);
+    writeLog("좋아요 취소: $unliked");
+
+    // 6) 좋아요 목록 재조회
+    final likedListAfter = await ApiService.getLikedRecipes();
+    writeLog("좋아요 목록(취소 후): $likedListAfter");
+
+    writeLog("🎉 좋아요 목록 테스트 완료");
   }
+
 
 
 

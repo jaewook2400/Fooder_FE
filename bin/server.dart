@@ -288,17 +288,46 @@ Future<void> main() async {
 
       // --------------- 레시피 ---------------
 
-      // GET /api/recipe/like   (좋아요한 레시피 목록) -- 항상 /api/recipe 보단 위에 있어야 함!(특수한 케이스가 일반적인 케이스보다 먼저)
+      // GET /api/recipe/like  (좋아요한 레시피 목록: DB 연동) (recipe API의 맨 위에 이게 있어야 함)
       if (method == 'GET' && path == '/api/recipe/like') {
-        final profile = userInfo.putIfAbsent(user, () => {
-          'likedRecipeId': <int>[],
-          'recordedRecipe': <Map<String, dynamic>>[],
+        // 1) username → user_id 조회
+        final userRows = await conn.execute(
+          Sql.named('SELECT user_id FROM users WHERE username = @u'),
+          parameters: {'u': user},
+        );
+
+        if (userRows.isEmpty) {
+          return _unauthorized(request, 'user not found');
+        }
+
+        final userId = userRows.first[0] as int;
+
+        // 2) 좋아요한 레시피 조회 (JOIN)
+        final rows = await conn.execute(
+          Sql.named('''
+      SELECT r.recipe_id, r.name, r.description, r.image_url
+      FROM user_liked_recipes ul
+      JOIN recipes r ON ul.recipe_id = r.recipe_id
+      WHERE ul.user_id = @uid
+      ORDER BY r.recipe_id
+    '''),
+          parameters: {'uid': userId},
+        );
+
+        final likedRecipes = rows.map((row) => {
+          "recipeId": row[0],
+          "name": row[1],
+          "description": row[2],
+          "imageUrl": row[3],
+        }).toList();
+
+        _okJson(request, {
+          'recipes': likedRecipes,
+          'count': likedRecipes.length,
         });
-        final likedIds = (profile['likedRecipeId'] as List).cast<int>();
-        final likedRecipes = recipes.where((r) => likedIds.contains(r['recipeId'] as int)).toList();
-        _okJson(request, {'recipes': likedRecipes, 'count': likedRecipes.length});
         continue;
       }
+
 
       // GET /api/recipe  (전체 레시피: DB 연동)
       if (method == 'GET' && path == '/api/recipe') {
