@@ -35,29 +35,33 @@ class _ApiTestWidgetState extends State<ApiTestWidget> {
   }
 
   void testFlow() async {
-    writeLog("---- testFlow 시작 ----");
+    writeLog("---- unlike 테스트 시작 ----");
 
     // 1) 로그인
     final login = await ApiService.login("user1", "pass1");
-    writeLog("로그인 결과: $login");
+    writeLog("로그인: $login");
 
-    // 2) 전체 레시피 조회
-    final all = await ApiService.getRecipes();
-    writeLog("전체 레시피 개수: ${all.length}");
+    // 2) 전체 레시피
+    final recipes = await ApiService.getRecipes();
+    writeLog("레시피 개수: ${recipes.length}");
 
-    if (all.isEmpty) {
-      writeLog("레시피가 없습니다. 테스트 종료");
+    if (recipes.isEmpty) {
+      writeLog("레시피 없음 → 테스트 종료");
       return;
     }
 
-    final firstId = all.first["recipeId"];
-    writeLog("테스트 대상으로 레시피 ID = $firstId 사용");
+    final targetId = recipes.first["recipeId"];
+    writeLog("테스트용 레시피 ID: $targetId");
 
-    // 3) 상세 조회
-    final detail = await ApiService.getRecipe(firstId);
-    writeLog("상세 레시피: $detail");
+    // // 3) 좋아요
+    // final likeRes = await ApiService.likeRecipe(targetId);
+    // writeLog("좋아요: $likeRes");
 
-    writeLog("🎉 상세 조회 테스트 완료");
+    // 4) 좋아요 취소
+    final unlikeRes = await ApiService.unlikeRecipe(targetId);
+    writeLog("좋아요 취소: $unlikeRes");
+
+    writeLog("🎉 unlike 테스트 완료");
   }
 
 

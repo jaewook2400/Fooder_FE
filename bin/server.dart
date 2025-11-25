@@ -421,43 +421,114 @@ Future<void> main() async {
       }
 
 
-      // POST /api/recipe/:recipeId/like
+      // POST /api/recipe/:recipeId/like  (DB 연동)
       if (method == 'POST' &&
           segments.length == 4 &&
           segments[0] == 'api' &&
           segments[1] == 'recipe' &&
           segments[3] == 'like') {
+
         final id = int.tryParse(segments[2]);
-        if (id == null) return _badRequest(request, 'invalid recipeId-3');
+        if (id == null) return _badRequest(request, 'invalid recipeId');
 
-        final profile = userInfo.putIfAbsent(user, () => {
-          'likedRecipeId': <int>[],
-          'recordedRecipe': <Map<String, dynamic>>[],
-        });
+        // 1) username -> user_id 조회
+        final userRows = await conn.execute(
+          Sql.named('SELECT user_id FROM users WHERE username = @u'),
+          parameters: {'u': user},
+        );
 
-        final liked = (profile['likedRecipeId'] as List).cast<int>();
-        if (!liked.contains(id)) liked.add(id);
+        if (userRows.isEmpty) {
+          // 토큰에 있는 username이 DB에 없는 경우
+          return _unauthorized(request, 'user not found');
+        }
+
+        final userId = userRows.first[0] as int;
+
+        // 2) 레시피 존재 여부 확인
+        final recipeRows = await conn.execute(
+          Sql.named('SELECT recipe_id FROM recipes WHERE recipe_id = @id'),
+          parameters: {'id': id},
+        );
+
+        if (recipeRows.isEmpty) {
+          return _notFound(request, 'recipe not found');
+        }
+
+        // 3) 이미 좋아요 했는지 확인
+        final alreadyRows = await conn.execute(
+          Sql.named('''
+      SELECT id 
+      FROM user_liked_recipes
+      WHERE user_id = @uid AND recipe_id = @rid
+    '''),
+          parameters: {
+            'uid': userId,
+            'rid': id,
+          },
+        );
+
+        if (alreadyRows.isEmpty) {
+          // 4) 없으면 새로 INSERT
+          await conn.execute(
+            Sql.named('''
+        INSERT INTO user_liked_recipes (user_id, recipe_id)
+        VALUES (@uid, @rid)
+      '''),
+            parameters: {
+              'uid': userId,
+              'rid': id,
+            },
+          );
+          print('-----user $userId liked recipe $id-----');
+        } else {
+          print('=====user $userId already liked recipe $id=====');
+        }
 
         _okJson(request, {'message': 'liked', 'recipeId': id});
         continue;
       }
 
-      // DELETE /api/recipe/:recipeId/like
+      // DELETE /api/recipe/:recipeId/like  (DB 연동)
       if (method == 'DELETE' &&
           segments.length == 4 &&
           segments[0] == 'api' &&
           segments[1] == 'recipe' &&
           segments[3] == 'like') {
+
         final id = int.tryParse(segments[2]);
-        if (id == null) return _badRequest(request, 'invalid recipeId-4');
+        if (id == null) return _badRequest(request, 'invalid recipeId');
 
-        final profile = userInfo.putIfAbsent(user, () => {
-          'likedRecipeId': <int>[],
-          'recordedRecipe': <Map<String, dynamic>>[],
-        });
+        // 1) username → user_id 조회
+        final userRows = await conn.execute(
+          Sql.named('SELECT user_id FROM users WHERE username = @u'),
+          parameters: {'u': user},
+        );
 
-        final liked = (profile['likedRecipeId'] as List).cast<int>();
-        liked.remove(id);
+        if (userRows.isEmpty) {
+          return _unauthorized(request, 'user not found');
+        }
+
+        final userId = userRows.first[0] as int;
+
+        // 2) 좋아요 레코드 삭제
+        final deleted = await conn.execute(
+          Sql.named('''
+      DELETE FROM user_liked_recipes
+      WHERE user_id = @uid AND recipe_id = @rid
+    '''),
+          parameters: {
+            'uid': userId,
+            'rid': id,
+          },
+        );
+
+        final affected = deleted.affectedRows;
+
+        if (affected == 0) {
+          print('=====좋아요 상태가 아니었음 (user=$userId, recipe=$id)=====');
+        } else {
+          print('-----좋아요 취소됨 (user=$userId, recipe=$id)-----');
+        }
 
         _okJson(request, {'message': 'unliked', 'recipeId': id});
         continue;
