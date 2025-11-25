@@ -92,7 +92,7 @@ class ApiService {
   static Future<List<dynamic>> getRecipes() async {
     final res = await http.get(
       Uri.parse("$baseUrl/api/recipe"),
-      headers: await _headers(),
+      headers: {"Content-Type": "application/json"},
     );
     final data = jsonDecode(res.body);
     return data["recipes"];

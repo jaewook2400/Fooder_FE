@@ -45,9 +45,17 @@ class _ApiTestWidgetState extends State<ApiTestWidget> {
     final recipeCountBefore = await ApiService.getRecipeCount();
     writeLog("현재 레시피 개수(시작 시점): $recipeCountBefore");
 
-    // 3) 전체 레시피 수 테스트 (기존 /api/recipe)
+    // 3-1) 전체 레시피 DB에서 받아오기
     final recipes = await ApiService.getRecipes();
-    writeLog("레시피 수(엔드포인트 /api/recipe): ${recipes.length}");
+    writeLog("📌 전체 레시피 개수: ${recipes.length}");
+
+    // 3-2) 첫 번째 레시피 확인 (있을 때만)
+    if (recipes.isNotEmpty) {
+      final r = recipes.first;
+      writeLog("첫 번째 레시피: ${r["name"]}");
+      writeLog("재료: ${r["ingredients"]}");
+      writeLog("조리 단계: ${r["steps"]}");
+    }
 
     // 4) 재료 목록 테스트
     final ingredients = await ApiService.getIngredients();

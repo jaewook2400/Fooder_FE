@@ -300,8 +300,58 @@ Future<void> main() async {
         continue;
       }
 
-      // GET /api/recipe  (전체)
+      // GET /api/recipe  (전체 레시피: DB 연동)
       if (method == 'GET' && path == '/api/recipe') {
+        // 1) 레시피 기본 정보 조회
+        final recipeRows = await conn.execute(
+          Sql.named('''
+      SELECT recipe_id, name, time_to_cook, description, image_url
+      FROM recipes
+      ORDER BY recipe_id
+    '''),
+        );
+
+        final recipes = [];
+
+        for (final row in recipeRows) {
+          final r = row.toColumnMap();
+          final recipeId = r['recipe_id'];
+
+          // 2) 재료 조회
+          final ingRows = await conn.execute(
+            Sql.named('''
+        SELECT ingredient
+        FROM recipe_ingredients
+        WHERE recipe_id = @id
+      '''),
+            parameters: {'id': recipeId},
+          );
+          final ingredients = ingRows.map((i) => i[0] as String).toList();
+
+          // 3) 조리 단계 조회
+          final stepRows = await conn.execute(
+            Sql.named('''
+        SELECT step_order, step_text
+        FROM recipe_steps
+        WHERE recipe_id = @id
+        ORDER BY step_order
+      '''),
+            parameters: {'id': recipeId},
+          );
+          final steps = stepRows.map((s) => s.toColumnMap()).toList();
+
+          // 4) 하나의 레시피 JSON으로 구성
+          recipes.add({
+            'recipeId': recipeId,
+            'name': r['name'],
+            'timeToCook': r['time_to_cook'],
+            'description': r['description'],
+            'imageUrl': r['image_url'],
+            'ingredients': ingredients,
+            'steps': steps.map((s) => s['step_text']).toList(),
+          });
+        }
+
         _okJson(request, {'recipes': recipes});
         continue;
       }
