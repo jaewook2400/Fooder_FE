@@ -4,9 +4,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:postgres/postgres.dart';
 
-/// 간단한 메모리 유저 저장소 (회원가입/로그인 토큰용)
-final Map<String, String> _userPasswords = {}; // username -> password
-
 Future<void> main() async {
 
   final conn = await Connection.open(Endpoint
@@ -30,6 +27,13 @@ Future<void> main() async {
   print('-----Server running on http://${server.address.host}:${server.port}-----');
 
   await for (final request in server){
+
+    if (request.method == 'OPTIONS') {
+      request.response.statusCode = HttpStatus.ok;
+      await request.response.close();
+      continue;
+    }
+
     // 공통 헤더 (JSON & CORS)
     _applyCommonHeaders(request.response);
 
@@ -64,7 +68,7 @@ Future<void> main() async {
         final authHeader = request.headers.value(HttpHeaders.authorizationHeader);
 
         // 2) 토큰 없거나 유효하지 않으면 401
-        if (!_validateToken(authHeader)) {
+        if (!await _validateToken(authHeader, conn)) {
           _unauthorized(request, 'invalid or missing token');
           continue;
         }
@@ -153,21 +157,18 @@ Future<void> main() async {
 
       // GET /api/home/ingredient
       if (method == 'GET' && path == '/api/home/ingredient') {
-        // recipes에서 ingredient 유니크 추출
-        final set = <String>{};
-        for (final r in recipes) {
-          for (final ing in (r['ingredient'] as List).cast<String>()) {
-            if (set.length < 10) {
-              set.add(ing);
-            } else {
-              break;
-            }
-          }
-          if (set.length >= 10) {
-            break;
-          }
-        }
-        _okJson(request, {'ingredient': set.toList()});
+        // DB에서 중복 없이 10개 재료 조회
+        final rows = await conn.execute(
+          Sql.named('''
+        SELECT DISTINCT ingredient
+        FROM recipe_ingredients
+        LIMIT 10
+      '''),
+        );
+
+        // rows는 List<List<dynamic>> 형태 → rows[i][0] 사용
+        final ingredients = rows.map((row) => row[0] as String).toList();
+        _okJson(request, {'ingredient': ingredients});
         continue;
       }
 
@@ -435,21 +436,42 @@ bool _isPublicEndpoint(String method, String path, List<String> segments) {
   return false;
 }
 
-bool _validateToken(String? authHeader) {
-  if (authHeader == null) return false;
+Future<bool> _validateToken(String? authHeader, Connection conn) async {
+  print('-----validateToken() called. authHeader = $authHeader -----');
+
+  if (authHeader == null) {
+    print('=====No Authorization header======');
+    return false;
+  }
 
   final parts = authHeader.split(' ');
-  if (parts.length != 2 || parts[0].toLowerCase() != 'bearer') return false;
+  if (parts.length != 2 || parts[0].toLowerCase() != 'bearer') {
+    print('=====Header format invalid: $authHeader=====');
+    return false;
+  }
 
-  final token = parts[1];           // token-username
-  if (!token.startsWith('token-')) return false;
+  final token = parts[1];
+  if (!token.startsWith('token-')) {
+    print('=====Token does not start with token- prefix=====');
+    return false;
+  }
 
   final username = token.substring(6);
-  if (username.isEmpty) return false;
+  if (username.isEmpty) {
+    print('=====Username empty in token=====');
+    return false;
+  }
 
-  // 실제 가입한 유저인지 검사
-  return _userPasswords.containsKey(username);
+  print('------ Checking DB for username "$username"... -----');
+
+  final rows = await conn.execute(
+    Sql.named('SELECT user_id FROM users WHERE username = @u'),
+    parameters: {'u': username},
+  );
+
+  return rows.isNotEmpty;
 }
+
 
 void _applyCommonHeaders(HttpResponse res) {
   res.headers.contentType = ContentType.json;

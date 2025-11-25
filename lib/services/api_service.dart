@@ -10,10 +10,10 @@ class ApiService {
   /// 모든 요청에 공통적으로 들어가는 헤더
   static Future<Map<String, String>> _headers() async {
     final token = await _storage.getAccessToken();
-
+    print("token is $token");
     return {
+      "Authorization": "Bearer $token",
       "Content-Type": "application/json",
-      if (token != null) "Authorization": "Bearer $token",
     };
   }
 
@@ -22,7 +22,7 @@ class ApiService {
   static Future<Map<String, dynamic>> register(String username, String password) async {
     final res = await http.post(
       Uri.parse("$baseUrl/api/register"),
-      headers: await _headers(),
+      headers: {"Content-Type": "application/json"},
       body: jsonEncode({"username": username, "password": password}),
     );
     return jsonDecode(res.body);
@@ -31,7 +31,7 @@ class ApiService {
   static Future<Map<String, dynamic>> login(String username, String password) async {
     final res = await http.post(
       Uri.parse("$baseUrl/api/login"),
-      headers: await _headers(),
+      headers: {"Content-Type": "application/json"},
       body: jsonEncode({"username": username, "password": password}),
     );
 
@@ -47,6 +47,20 @@ class ApiService {
   }
 
   // ---------------- RECIPE ----------------
+
+  static Future<List<String>> getIngredients() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/home/ingredient'),
+      headers: await _headers(),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to load ingredients");
+    }
+
+    final json = jsonDecode(response.body);
+    return (json['ingredient'] as List).cast<String>();
+  }
 
   static Future<List<dynamic>> getRecipes() async {
     final res = await http.get(
