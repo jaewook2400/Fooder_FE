@@ -175,26 +175,114 @@ Future<void> main() async {
       // POST /api/home/preference
       if (method == 'POST' && path == '/api/home/preference') {
         final body = await _readJson(request);
-        final prefs = (body['preference'] as List?)?.cast<bool>() ?? const <bool>[];
-        print('📩 /preference from $user: $prefs');
 
-        // TODO: 선호도 기반 추천 알고리즘
-        // 지금은 목데이터: AIMadeRecipe 있으면 우선, 없으면 recipes[0]
-        final result = Map<String, dynamic>.from(aiMadeRecipe);
-        _okJson(request, result);
+        final prefs = (body['preference'] as List?)?.cast<bool>() ?? [];
+        print('/preference from $user: $prefs');
+
+        // 1) DB에서 ingredient 전체 불러오기 (이미 홈 화면에서 제공하던 것과 동일)
+        final ingRows = await conn.execute(
+          Sql.named('''
+      SELECT DISTINCT ingredient
+      FROM recipe_ingredients
+      ORDER BY ingredient
+      LIMIT 10
+    '''),
+        );
+        final ingredients = ingRows.map((r) => r[0] as String).toList();
+
+        if (prefs.length != ingredients.length) {
+          return _badRequest(request, 'preference length mismatch');
+        }
+
+        // 2) true 인 재료만 필터링
+        final preferredIngredients = <String>[];
+        for (int i = 0; i < prefs.length; i++) {
+          if (prefs[i] == true) {
+            preferredIngredients.add(ingredients[i]);
+          }
+        }
+
+        print("-----선택된 재료: $preferredIngredients-----");
+
+        // 3) AI 추천 함수 호출 (너가 구현한 함수)
+        final recommended = await aiMadeRecipe(preferredIngredients);
+        // recommended 예: { recipeName: ..., ingredients: [...], steps: [...], imageUrl: ... }
+
+        // 4) DB 저장
+        // 4-1) recipes 저장
+        final insertedRecipe = await conn.execute(
+          Sql.named('''
+      INSERT INTO recipes (name, description, image_url)
+      VALUES (@n, @d, @img)
+      RETURNING recipe_id, name, description, image_url
+    '''),
+          parameters: {
+            'n': recommended['name'],
+            'd': recommended['description'],
+            'img': recommended['imageUrl'],
+          },
+        );
+
+        final recipe = insertedRecipe.first.toColumnMap();
+        final recipeId = recipe['recipe_id'];
+
+        // 4-2) recipe_ingredients 저장
+        for (final ing in recommended['ingredients']) {
+          await conn.execute(
+            Sql.named('''
+        INSERT INTO recipe_ingredients (recipe_id, ingredient)
+        VALUES (@id, @ing)
+      '''),
+            parameters: {'id': recipeId, 'ing': ing},
+          );
+        }
+
+        print("🍳 새 레시피 저장 완료: ID=$recipeId");
+
+        // 5) 생성된 레시피 클라이언트에 응답
+        _okJson(request, {
+          'recipe': {
+            'recipeId': recipeId,
+            'name': recipe['name'],
+            'description': recipe['description'],
+            'imageUrl': recipe['image_url'],
+            'ingredients': recommended['ingredients'],
+          }
+        });
         continue;
       }
 
-      // DELETE /api/home/:recipeId  (레시피 미선택: 목 처리)
+      // DELETE /api/home/:recipeId
       if (method == 'DELETE' &&
           segments.length == 3 &&
           segments[0] == 'api' &&
           segments[1] == 'home') {
+
         final id = int.tryParse(segments[2]);
-        if (id == null) return _badRequest(request, 'invalid recipeId-1');
-        // 실제 로직이 정해지지 않았으므로 수신만 확인
-        print('🗑️  unselect recipe $id for $user');
-        _okJson(request, {'message': 'unselected', 'recipeId': id});
+        if (id == null) return _badRequest(request, 'invalid recipeId');
+
+        print('-----DELETE recipe $id from DB-----');
+
+        final deleted = await conn.execute(
+          Sql.named('''
+      DELETE FROM recipes
+      WHERE recipe_id = @id
+      RETURNING recipe_id
+    '''),
+          parameters: {'id': id},
+        );
+
+        if (deleted.isEmpty) {
+          return _notFound(request, 'recipe not found');
+        }
+
+        // recipe_ingredients, user_liked_recipes, user_recorded_recipes는
+        // FK ON DELETE CASCADE 덕분에 자동 삭제됨
+
+        _okJson(request, {
+          'message': 'recipe deleted',
+          'recipeId': id,
+        });
         continue;
       }
 
@@ -366,6 +454,23 @@ Future<void> main() async {
       }
 
 
+      //-----------디버깅용-----------
+
+      // GET /api/debug/recipe-count
+      if (method == 'GET' && path == '/api/debug/recipe-count') {
+        final rows = await conn.execute(
+          Sql.named('SELECT COUNT(*) FROM recipes'),
+        );
+
+        final count = rows.first[0];
+
+        _okJson(request, {
+          'recipeCount': count,
+        });
+        continue;
+      }
+
+
       // --------------- 기본 404 ---------------
       return _notFound(request, 'Endpoint not found: $method $path');
     } catch (e, st) {
@@ -374,6 +479,17 @@ Future<void> main() async {
     }
   }
 }
+
+Future<Map<String, dynamic>> aiMadeRecipe(List<String> ingredients) async {
+  return {
+    'name': 'AI 추천 계란볶음밥',
+    'description': '선호 재료 기반 자동 생성 레시피',
+    'ingredients': ['계란', '밥', '대파'],
+    'steps': ['1. 준비한다', '2. 볶는다'],
+    'imageUrl': 'https://example.com/image.jpg'
+  };
+}
+
 
 // ----------------- 유틸 -----------------
 

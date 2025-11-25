@@ -37,24 +37,51 @@ class _ApiTestWidgetState extends State<ApiTestWidget> {
   void testFlow() async {
     writeLog("----시작----");
 
-    // 1) 로그인만 수행
+    // 1) 로그인
     final login = await ApiService.login("user1", "pass1");
     writeLog("로그인: $login");
 
-    // 2) 전체 레시피 수 테스트
-    final recipes = await ApiService.getRecipes();
-    writeLog("레시피 수: ${recipes.length}");
+    // 2) 현재 레시피 개수 (DB 기준)
+    final recipeCountBefore = await ApiService.getRecipeCount();
+    writeLog("현재 레시피 개수(시작 시점): $recipeCountBefore");
 
-    // 3) 방금 만든 ingredient API 호출
+    // 3) 전체 레시피 수 테스트 (기존 /api/recipe)
+    final recipes = await ApiService.getRecipes();
+    writeLog("레시피 수(엔드포인트 /api/recipe): ${recipes.length}");
+
+    // 4) 재료 목록 테스트
     final ingredients = await ApiService.getIngredients();
     writeLog("재료 목록(10개 최대): $ingredients");
 
-    // 4) 좋아요 테스트
-    final like = await ApiService.likeRecipe(1);
-    writeLog("좋아요 결과: $like");
+    // 5) 선호도 → AI 레시피 생성 (예: 짝수 인덱스만 true)
+    final prefs = List<bool>.generate(
+      ingredients.length,
+          (i) => i.isEven,
+    );
+    writeLog("보낼 preference: $prefs");
+
+    final aiRecipe = await ApiService.sendPreference(prefs);
+    writeLog("AI 생성 레시피 응답: $aiRecipe");
+
+    final recipeId = aiRecipe["recipe"]["recipeId"];
+    writeLog("생성된 레시피 ID: $recipeId");
+
+    // 6) 생성 후 레시피 개수 확인
+    final recipeCountAfterCreate = await ApiService.getRecipeCount();
+    writeLog("레시피 개수(생성 후): $recipeCountAfterCreate");
+
+    // 7) 삭제 테스트
+    final deleted = await ApiService.deleteRecipe(recipeId);
+    writeLog("레시피 삭제 결과: $deleted");
+
+    // 8) 삭제 후 레시피 개수 확인
+    final recipeCountAfterDelete = await ApiService.getRecipeCount();
+    writeLog("레시피 개수(삭제 후): $recipeCountAfterDelete");
 
     writeLog("🎉 테스트 완료");
   }
+
+
 
   @override
   Widget build(BuildContext context) {

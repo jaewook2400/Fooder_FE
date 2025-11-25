@@ -62,6 +62,33 @@ class ApiService {
     return (json['ingredient'] as List).cast<String>();
   }
 
+  static Future<Map<String, dynamic>> sendPreference(List<bool> prefs) async {
+    final res = await http.post(
+      Uri.parse("$baseUrl/api/home/preference"),
+      headers: await _headers(),
+      body: jsonEncode({"preference": prefs}),
+    );
+
+    if (res.statusCode != 200) {
+      throw Exception("Failed to send preference");
+    }
+
+    return jsonDecode(res.body);
+  }
+
+  static Future<Map<String, dynamic>> deleteRecipe(int recipeId) async {
+    final res = await http.delete(
+      Uri.parse("$baseUrl/api/home/$recipeId"),
+      headers: await _headers(),
+    );
+
+    if (res.statusCode != 200) {
+      throw Exception("Failed to delete recipe");
+    }
+
+    return jsonDecode(res.body);
+  }
+
   static Future<List<dynamic>> getRecipes() async {
     final res = await http.get(
       Uri.parse("$baseUrl/api/recipe"),
@@ -101,5 +128,19 @@ class ApiService {
       headers: await _headers(),
     );
     return jsonDecode(res.body);
+  }
+
+  static Future<int> getRecipeCount() async {
+    final res = await http.get(
+      Uri.parse("$baseUrl/api/debug/recipe-count"),
+      headers: await _headers(),
+    );
+
+    if (res.statusCode != 200) {
+      throw Exception("Failed to load recipe count");
+    }
+
+    final data = jsonDecode(res.body);
+    return data["recipeCount"] as int;
   }
 }
