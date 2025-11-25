@@ -356,22 +356,70 @@ Future<void> main() async {
         continue;
       }
 
-      // GET /api/recipe/:recipeId (상세)
+      // GET /api/recipe/:recipeId (상세, DB 연동)
       if (method == 'GET' &&
           segments.length == 3 &&
           segments[0] == 'api' &&
           segments[1] == 'recipe') {
-        final id = int.tryParse(segments[2]);
-        if (id == null) return _badRequest(request, 'invalid recipeId-2');
 
-        final recipe = recipes.firstWhere(
-              (r) => r['recipeId'] == id,
-          orElse: () => {},
+        final id = int.tryParse(segments[2]);
+        if (id == null) return _badRequest(request, 'invalid recipeId');
+
+        // 1) 레시피 기본 정보 조회
+        final recipeRows = await conn.execute(
+          Sql.named('''
+      SELECT recipe_id, name, time_to_cook, description, image_url
+      FROM recipes
+      WHERE recipe_id = @id
+    '''),
+          parameters: {'id': id},
         );
-        if (recipe.isEmpty) return _notFound(request, 'recipe not found');
-        _okJson(request, recipe);
+
+        if (recipeRows.isEmpty) {
+          return _notFound(request, 'recipe not found');
+        }
+
+        final r = recipeRows.first.toColumnMap();
+
+        // 2) 재료 조회
+        final ingRows = await conn.execute(
+          Sql.named('''
+      SELECT ingredient
+      FROM recipe_ingredients
+      WHERE recipe_id = @id
+    '''),
+          parameters: {'id': id},
+        );
+        final ingredients = ingRows.map((x) => x[0] as String).toList();
+
+        // 3) 조리 단계 조회
+        final stepRows = await conn.execute(
+          Sql.named('''
+      SELECT step_order, step_text
+      FROM recipe_steps
+      WHERE recipe_id = @id
+      ORDER BY step_order
+    '''),
+          parameters: {'id': id},
+        );
+        final steps = stepRows.map((s) => s[1] as String).toList();
+
+        // 4) 응답
+        _okJson(request, {
+          'recipe': {
+            'recipeId': r['recipe_id'],
+            'name': r['name'],
+            'timeToCook': r['time_to_cook'],
+            'description': r['description'],
+            'imageUrl': r['image_url'],
+            'ingredients': ingredients,
+            'steps': steps,
+          }
+        });
+
         continue;
       }
+
 
       // POST /api/recipe/:recipeId/like
       if (method == 'POST' &&

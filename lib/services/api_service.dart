@@ -103,7 +103,8 @@ class ApiService {
       Uri.parse("$baseUrl/api/recipe/$id"),
       headers: await _headers(),
     );
-    return jsonDecode(res.body);
+    final data = jsonDecode(res.body);
+    return data["recipe"];
   }
 
   static Future<Map<String, dynamic>> likeRecipe(int id) async {
