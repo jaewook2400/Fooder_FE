@@ -40,7 +40,7 @@ class ApiService {
     // 로그인 성공 시 token 저장
     if (data["token"] != null) {
       await _storage.saveAccessToken(data["token"]);
-      print("🔑 토큰 저장됨 → ${data["token"]}");
+      print("----- 토큰 저장됨 → ${data["token"]} -----");
     }
 
     return data;

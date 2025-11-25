@@ -37,10 +37,10 @@ class _ApiTestWidgetState extends State<ApiTestWidget> {
   void testFlow() async {
     writeLog("----시작----");
 
-    final register = await ApiService.register("user1", "pass1");
+    final register = await ApiService.register("user2", "pass2");
     writeLog("회원가입: $register");
 
-    final login = await ApiService.login("user1", "pass1");
+    final login = await ApiService.login("user2", "pass2");
     writeLog("로그인: $login");
 
     final recipes = await ApiService.getRecipes();

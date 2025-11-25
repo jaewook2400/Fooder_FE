@@ -128,9 +128,19 @@ Future<void> main() async {
         if (username.isEmpty || password.isEmpty) {
           return _badRequest(request, 'username/password required');
         }
-        if (_userPasswords[username] != password) {
-          return _unauthorized(request, 'invalid credentials');
-        }
+
+        final result = await conn.execute(
+          Sql.named('SELECT password_hash FROM users WHERE username = @u'),
+          parameters: {'u': username},
+        );
+
+        if (result.isEmpty) return _badRequest(request, 'invalid credentials');
+        ;
+
+        final dbPassword = result.first[0];
+
+        if (dbPassword != password) return _badRequest(request, 'invalid credentials');
+
         _okJson(request, {
           'message': 'logged in',
           'token': 'token-$username',
