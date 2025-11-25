@@ -35,24 +35,33 @@ class _ApiTestWidgetState extends State<ApiTestWidget> {
   }
 
   void testFlow() async {
-    writeLog("---- 기록 레시피 테스트 시작 ----");
+    writeLog("----시작----");
 
     // 1) 로그인
     final login = await ApiService.login("user1", "pass1");
     writeLog("로그인: $login");
 
-    // 2) 기록된 레시피 목록 조회
-    final records = await ApiService.getRecordedRecipes();
-    writeLog("기록된 레시피 개수: ${records.length}");
-    writeLog("기록된 레시피 목록: $records");
+    // 2) 기록된 레시피 목록 불러오기
+    final recordedBefore = await ApiService.getRecordedRecipes();
+    writeLog("삭제 전 기록된 레시피: $recordedBefore");
 
-    if (records.isEmpty) {
-      writeLog("기록된 레시피가 없어서 삭제 테스트 불가");
-      writeLog("🎉 테스트 종료");
+    if (recordedBefore.isEmpty) {
+      writeLog("❗ 기록된 레시피가 없어서 삭제 테스트를 건너뜀");
       return;
     }
 
-    writeLog("🎉 기록 레시피 테스트 완료");
+    // 3) 첫 번째 기록 레시피 삭제
+    final recipeId = recordedBefore[0]["recipeId"];
+    writeLog("삭제할 레시피 ID: $recipeId");
+
+    final deleted = await ApiService.deleteRecordedRecipe(recipeId);
+    writeLog("삭제 결과: $deleted");
+
+    // 4) 삭제 후 다시 목록 조회
+    final recordedAfter = await ApiService.getRecordedRecipes();
+    writeLog("삭제 후 기록된 레시피: $recordedAfter");
+
+    writeLog("🎉 테스트 완료");
   }
 
 

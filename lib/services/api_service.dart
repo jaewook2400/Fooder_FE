@@ -141,6 +141,24 @@ class ApiService {
     return json["recipes"] as List<dynamic>;
   }
 
+  static Future<Map<String, dynamic>> sendRecordRecipe(Map<String, dynamic> data) async {
+    final res = await http.post(
+      Uri.parse("$baseUrl/api/record/recipe"),
+      headers: await _headers(),
+      body: jsonEncode(data),
+    );
+
+    return jsonDecode(res.body);
+  }
+
+  static Future<Map<String, dynamic>> deleteRecordedRecipe(int recipeId) async {
+    final res = await http.delete(
+      Uri.parse("$baseUrl/api/record/$recipeId"),
+      headers: await _headers(),
+    );
+
+    return jsonDecode(res.body);
+  }
 
 
   //-----디버그용-----

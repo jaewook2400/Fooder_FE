@@ -167,8 +167,8 @@ Future<void> main() async {
         );
 
         // rows는 List<List<dynamic>> 형태 → rows[i][0] 사용
-        final ingredients = rows.map((row) => row[0] as String).toList();
-        _okJson(request, {'ingredient': ingredients});
+        final ingredient = rows.map((row) => row[0] as String).toList();
+        _okJson(request, {'ingredient': ingredient});
         continue;
       }
 
@@ -188,9 +188,9 @@ Future<void> main() async {
       LIMIT 10
     '''),
         );
-        final ingredients = ingRows.map((r) => r[0] as String).toList();
+        final ingredient = ingRows.map((r) => r[0] as String).toList();
 
-        if (prefs.length != ingredients.length) {
+        if (prefs.length != ingredient.length) {
           return _badRequest(request, 'preference length mismatch');
         }
 
@@ -198,7 +198,7 @@ Future<void> main() async {
         final preferredIngredients = <String>[];
         for (int i = 0; i < prefs.length; i++) {
           if (prefs[i] == true) {
-            preferredIngredients.add(ingredients[i]);
+            preferredIngredients.add(ingredient[i]);
           }
         }
 
@@ -227,7 +227,7 @@ Future<void> main() async {
         final recipeId = recipe['recipe_id'];
 
         // 4-2) recipe_ingredients 저장
-        for (final ing in recommended['ingredients']) {
+        for (final ing in recommended['ingredient']) {
           await conn.execute(
             Sql.named('''
         INSERT INTO recipe_ingredients (recipe_id, ingredient)
@@ -246,7 +246,7 @@ Future<void> main() async {
             'name': recipe['name'],
             'description': recipe['description'],
             'imageUrl': recipe['image_url'],
-            'ingredients': recommended['ingredients'],
+            'ingredient': recommended['ingredient'],
           }
         });
         continue;
@@ -355,7 +355,7 @@ Future<void> main() async {
       '''),
             parameters: {'id': recipeId},
           );
-          final ingredients = ingRows.map((i) => i[0] as String).toList();
+          final ingredient = ingRows.map((i) => i[0] as String).toList();
 
           // 3) 조리 단계 조회
           final stepRows = await conn.execute(
@@ -376,7 +376,7 @@ Future<void> main() async {
             'timeToCook': r['time_to_cook'],
             'description': r['description'],
             'imageUrl': r['image_url'],
-            'ingredients': ingredients,
+            'ingredient': ingredient,
             'steps': steps.map((s) => s['step_text']).toList(),
           });
         }
@@ -419,7 +419,7 @@ Future<void> main() async {
     '''),
           parameters: {'id': id},
         );
-        final ingredients = ingRows.map((x) => x[0] as String).toList();
+        final ingredient = ingRows.map((x) => x[0] as String).toList();
 
         // 3) 조리 단계 조회
         final stepRows = await conn.execute(
@@ -441,7 +441,7 @@ Future<void> main() async {
             'timeToCook': r['time_to_cook'],
             'description': r['description'],
             'imageUrl': r['image_url'],
-            'ingredients': ingredients,
+            'ingredient': ingredient,
             'steps': steps,
           }
         });
@@ -634,7 +634,7 @@ Future<void> main() async {
             'timeToCook': map['time_to_cook'],
             'description': map['description'],
             'imageUrl': map['image_url'],
-            'ingredients': ingredientMap[map['recipe_id']] ?? [],
+            'ingredient': ingredientMap[map['recipe_id']] ?? [],
           });
         }
 
@@ -642,52 +642,146 @@ Future<void> main() async {
         continue;
       }
 
-      // DELETE /api/record/:recipeId  (기록된 레시피 삭제)
+      // DELETE /api/record/:recipeId  (기록된 레시피 삭제 = 레시피 영구 삭제)
       if (method == 'DELETE' &&
           segments.length == 3 &&
           segments[0] == 'api' &&
           segments[1] == 'record') {
 
-        print("REQ PATH: ${request.uri.pathSegments}");
-
         final id = int.tryParse(segments[2]);
-        if (id == null) return _badRequest(request, 'invalid recipeId-5');
+        if (id == null) return _badRequest(request, 'invalid recipeId');
 
-        final profile = userInfo.putIfAbsent(user, () => {
-          'likedRecipeId': <int>[],
-          'recordedRecipe': <Map<String, dynamic>>[],
+        // 🔐 유저 인증 정보에서 username 얻기
+        final username = _extractUserFromAuth(
+            request.headers.value(HttpHeaders.authorizationHeader)
+        );
+
+        // username → user_id 매핑
+        final userRow = await conn.execute(
+          Sql.named('SELECT user_id FROM users WHERE username = @u'),
+          parameters: {'u': username},
+        );
+        if (userRow.isEmpty) return _unauthorized(request, 'user not found');
+
+        final userId = userRow.first[0];
+
+        // 1) 이 레시피가 이 유저가 기록한 레시피인지 확인
+        final check = await conn.execute(
+          Sql.named('''
+      SELECT id FROM user_recorded_recipes
+      WHERE user_id = @uid AND recipe_id = @rid
+    '''),
+          parameters: {'uid': userId, 'rid': id},
+        );
+
+        if (check.isEmpty) {
+          return _notFound(request, 'recipe not found or not yours');
+        }
+
+        // 2) recorded 기록 먼저 삭제
+        await conn.execute(
+          Sql.named('DELETE FROM user_recorded_recipes WHERE recipe_id = @rid'),
+          parameters: {'rid': id},
+        );
+
+        // 3) steps 삭제
+        await conn.execute(
+          Sql.named('DELETE FROM recipe_steps WHERE recipe_id = @rid'),
+          parameters: {'rid': id},
+        );
+
+        // 4) ingredients 삭제
+        await conn.execute(
+          Sql.named('DELETE FROM recipe_ingredients WHERE recipe_id = @rid'),
+          parameters: {'rid': id},
+        );
+
+        // 5) recipes 삭제 (마지막)
+        await conn.execute(
+          Sql.named('DELETE FROM recipes WHERE recipe_id = @rid'),
+          parameters: {'rid': id},
+        );
+
+        _okJson(request, {
+          'message': 'recipe permanently deleted',
+          'recipeId': id
         });
 
-        // recordedRecipe는 List<Map<String, dynamic>>
-        final list = (profile['recordedRecipe'] as List).cast<Map<String, dynamic>>();
-
-        // recipeId가 같은 recordedRecipe만 삭제
-        list.removeWhere((recipe) => recipe['recipeId'] == id);
-
-        _okJson(request, {'message': 'record deleted', 'recipeId': id});
         continue;
       }
 
       // POST /api/record/recipe (수동 추가)
       if (method == 'POST' && path == '/api/record/recipe') {
         final body = await _readJson(request);
-        // recipeId가 없으면 자동 채번 (1000번대부터)
-        var rid = body['recipeId'];
-        if (rid == null) {
-          final now = DateTime.now().millisecondsSinceEpoch;
-          rid = (now % 1000000) + 1000;
-          body['recipeId'] = rid;
+
+        final recipeName = body['name'] ?? '';
+        final description = body['description'] ?? '';
+        final imageUrl = body['imageUrl'] ?? '';
+        final ingredient = (body['ingredient'] as List?)?.cast<String>() ?? [];
+
+        if (recipeName.isEmpty || ingredient.isEmpty) {
+          return _badRequest(request, 'name and ingredients are required');
         }
 
-        final profile = userInfo.putIfAbsent(user, () => {
-          'likedRecipeId': <int>[],
-          'recordedRecipe': <Map<String, dynamic>>[],
+        // 1) username → user_id 조회
+        final userRow = await conn.execute(
+          Sql.named('SELECT user_id FROM users WHERE username = @u'),
+          parameters: {'u': user},
+        );
+
+        if (userRow.isEmpty) return _unauthorized(request, 'user not found');
+        final userId = userRow.first[0] as int;
+
+        // 2) recipes 테이블에 저장
+        final inserted = await conn.execute(
+          Sql.named('''
+      INSERT INTO recipes (name, description, image_url)
+      VALUES (@n, @d, @img)
+      RETURNING recipe_id, name, description, image_url
+    '''),
+          parameters: {
+            'n': recipeName,
+            'd': description,
+            'img': imageUrl,
+          },
+        );
+
+        final recipe = inserted.first.toColumnMap();
+        final recipeId = recipe['recipe_id'];
+
+        // 3) 재료 저장
+        for (final ing in ingredient) {
+          await conn.execute(
+            Sql.named('''
+        INSERT INTO recipe_ingredients (recipe_id, ingredient)
+        VALUES (@id, @ing)
+      '''),
+            parameters: {'id': recipeId, 'ing': ing},
+          );
+        }
+
+        // 4) user_recorded_recipes 저장
+        await conn.execute(
+          Sql.named('''
+      INSERT INTO user_recorded_recipes (user_id, recipe_id)
+      VALUES (@uid, @rid)
+    '''),
+          parameters: {'uid': userId, 'rid': recipeId},
+        );
+
+        print("-----수동 레시피 추가 완료 → recipeId=$recipeId-----");
+
+        // 5) 클라이언트에 응답
+        _okJson(request, {
+          'message': 'recorded added',
+          'recipe': {
+            'recipeId': recipeId,
+            'name': recipe['name'],
+            'description': recipe['description'],
+            'imageUrl': recipe['image_url'],
+            'ingredient': ingredient,
+          }
         });
-
-        final list = (profile['recordedRecipe'] as List).cast<Map<String, dynamic>>();
-        list.add(Map<String, dynamic>.from(body));
-
-        _okJson(request, {'message': 'recorded added', 'recipeId': body['recipeId']});
         continue;
       }
 
@@ -743,11 +837,11 @@ Future<void> main() async {
   }
 }
 
-Future<Map<String, dynamic>> aiMadeRecipe(List<String> ingredients) async {
+Future<Map<String, dynamic>> aiMadeRecipe(List<String> ingredient) async {
   return {
     'name': 'AI 추천 계란볶음밥',
     'description': '선호 재료 기반 자동 생성 레시피',
-    'ingredients': ['계란', '밥', '대파'],
+    'ingredient': ['계란', '밥', '대파'],
     'steps': ['1. 준비한다', '2. 볶는다'],
     'imageUrl': 'https://example.com/image.jpg'
   };
