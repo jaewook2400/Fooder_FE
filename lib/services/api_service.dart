@@ -160,6 +160,17 @@ class ApiService {
     return jsonDecode(res.body);
   }
 
+  static Future<String> createImageUrl() async {
+    final res = await http.post(
+      Uri.parse("$baseUrl/api/imageUrl"),
+      headers: await _headers(),
+    );
+
+    final data = jsonDecode(res.body);
+    return data["imageUrl"] as String;
+  }
+
+
 
   //-----디버그용-----
 
