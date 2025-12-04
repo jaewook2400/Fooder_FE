@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../secure_storage.dart';
+import 'secure_storage.dart';
 
 class ApiService {
   static const String baseUrl = "http://10.0.2.2:8080"; // ANDROID EMULATOR
