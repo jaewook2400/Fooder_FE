@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fooder_fe/feature/home/preference_screen.dart';
 import 'package:fooder_fe/shared/constants/app_colors.dart';
 import 'package:fooder_fe/shared/constants/app_text_styles.dart';
 import 'package:fooder_fe/shared/ui/bars/bottom_nav_bar.dart';
@@ -30,7 +31,7 @@ class HomeScreen extends StatelessWidget {
 
               _buildIntroSection(),
               const SizedBox(height: 24),
-              _buildTodayRecommendButton(),
+              _buildTodayRecommendButton(context),
               const SizedBox(height: 40),
               _buildPopularTitle(),
               const SizedBox(height: 12),
@@ -87,54 +88,62 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTodayRecommendButton() {
-    return Container(
-      width: 327,
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "오늘의 메뉴 추천받기",
-                style: AppTextStyles.pretendard_regular.copyWith(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.grey_4,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                ">",
-                style: AppTextStyles.pretendard_regular.copyWith(
-                  fontSize: 22,
-                  color: AppColors.grey_4,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            "원하는 재료를 선택하고 AI가 추천한 레시피로 요리해 보세요!",
-            style: AppTextStyles.pretendard_regular.copyWith(
-              fontSize: 14,
-              color: AppColors.grey_4,
+  Widget _buildTodayRecommendButton(context) {
+    return TextButton(
+      onPressed: (){
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PreferenceScreen()),
+        );
+      },
+      child: Container(
+        width: 327,
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "오늘의 메뉴 추천받기",
+                  style: AppTextStyles.pretendard_regular.copyWith(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.grey_4,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  ">",
+                  style: AppTextStyles.pretendard_regular.copyWith(
+                    fontSize: 22,
+                    color: AppColors.grey_4,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "원하는 재료를 선택하고 AI가 추천한 레시피로 요리해 보세요!",
+              style: AppTextStyles.pretendard_regular.copyWith(
+                fontSize: 14,
+                color: AppColors.grey_4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
