@@ -157,18 +157,23 @@ Future<void> main() async {
 
       // GET /api/home/ingredient
       if (method == 'GET' && path == '/api/home/ingredient') {
-        // DB에서 중복 없이 10개 재료 조회
+        // ingredients 테이블에서 모든 재료 조회
         final rows = await conn.execute(
           Sql.named('''
-        SELECT DISTINCT ingredient
-        FROM recipe_ingredients
-        LIMIT 10
-      '''),
+      SELECT ingredient, image_url
+      FROM ingredients
+      ORDER BY id
+      LIMIT 10
+    '''),
         );
 
-        // rows는 List<List<dynamic>> 형태 → rows[i][0] 사용
-        final ingredient = rows.map((row) => row[0] as String).toList();
-        _okJson(request, {'ingredient': ingredient});
+        // 결과를 Map 형태로 변환
+        final ingredients = rows.map((row) => {
+          'ingredient': row[0] as String,
+          'imageUrl': row[1] as String,
+        }).toList();
+
+        _okJson(request, {'ingredients': ingredients});
         continue;
       }
 
