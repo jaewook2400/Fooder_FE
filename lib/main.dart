@@ -2,6 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fooder_fe/feature/account/login_screen.dart';
 import 'feature/home/home_screen.dart';
+import 'feature/profile/profile_screen.dart';
+import 'feature/recipe/recipe_screen.dart';
+import 'feature/record/record_screen.dart';
 import 'services/api_service.dart';
 
 void main() async {
@@ -21,9 +24,9 @@ class MyApp extends StatelessWidget {
         '/': (context) => LoginScreen(),
         '/login': (context) => LoginScreen(),
         '/home': (context) => HomeScreen(),
-        //'/recipe': (context) => RecipeScreen(),
-        //'/record': (context) => RecordScreen(),
-        //'/profile': (context) => ProfileScreen(),
+        '/recipe': (context) => RecipeScreen(),
+        '/record': (context) => RecordScreen(),
+        '/profile': (context) => ProfileScreen(),
       },
     );
 

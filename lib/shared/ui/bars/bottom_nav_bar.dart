@@ -89,7 +89,7 @@ class _BottomItem extends StatelessWidget {
         children: [
           Image.asset(
             iconPath,
-            height: 24,
+            height: 28,
             color: isActive ? AppColors.main : AppColors.grey_4,
           ),
           const SizedBox(height: 2),
@@ -97,7 +97,7 @@ class _BottomItem extends StatelessWidget {
             label,
             style: AppTextStyles.pretendard_regular.copyWith(
               color: isActive ? AppColors.main : AppColors.grey_4,
-              fontSize: 11,
+              fontSize: 12,
             ),
           ),
         ],
