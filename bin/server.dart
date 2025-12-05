@@ -161,7 +161,7 @@ Future<void> main() async {
         final rows = await conn.execute(
           Sql.named('''
       SELECT ingredient, image_url
-      FROM ingredients
+      FROM recommend_ingredients
       ORDER BY id
       LIMIT 10
     '''),

@@ -25,16 +25,13 @@ class _PreferenceScreenState extends State<PreferenceScreen> {
   Future<void> _fetchIngredients() async {
     try {
       final response = await ApiService.getIngredients();
-      // response는 Map<String, dynamic>
 
-      // 데이터 검증 (비판적 보완)
-      if (response.isEmpty || response["ingredients"] == null) {
+      if (response.isEmpty) {
         throw Exception("Ingredients 데이터가 비어 있음");
       }
 
       setState(() {
-        ingredientData = response;
-        ingredientList = response["ingredients"];
+        ingredientList = response;
         isLoading = false;
       });
     } catch (e) {
@@ -141,7 +138,7 @@ class _PreferenceScreenState extends State<PreferenceScreen> {
           const SizedBox(height: 24),
 
           Text(
-            item["name"],
+            item["ingredient"],
             style: AppTextStyles.pretendard_regular.copyWith(
               fontSize: 22,
               fontWeight: FontWeight.w600,
