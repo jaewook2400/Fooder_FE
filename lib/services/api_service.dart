@@ -70,11 +70,13 @@ class ApiService {
     }).toList();
   }
 
-  static Future<Map<String, dynamic>> sendPreference(List<bool> prefs) async {
+  static Future<Map<String, dynamic>> sendPreference(List<String> likedIngredients) async {
     final res = await http.post(
       Uri.parse("$baseUrl/api/home/preference"),
       headers: await _headers(),
-      body: jsonEncode({"preference": prefs}),
+      body: jsonEncode({
+        "preference": likedIngredients,  // List<String> 전송
+      }),
     );
 
     if (res.statusCode != 200) {

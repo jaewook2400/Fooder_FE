@@ -181,35 +181,15 @@ Future<void> main() async {
       if (method == 'POST' && path == '/api/home/preference') {
         final body = await _readJson(request);
 
-        final prefs = (body['preference'] as List?)?.cast<bool>() ?? [];
-        print('/preference from $user: $prefs');
+        // 1) 클라이언트에서 좋아요한 재료 문자열 리스트를 받는다.
+        final preferredIngredients = (body['preference'] as List?)?.cast<String>() ?? [];
+        print('/preference from $user: $preferredIngredients');
 
-        // 1) DB에서 ingredient 전체 불러오기 (이미 홈 화면에서 제공하던 것과 동일)
-        final ingRows = await conn.execute(
-          Sql.named('''
-      SELECT DISTINCT ingredient
-      FROM recipe_ingredients
-      ORDER BY ingredient
-      LIMIT 10
-    '''),
-        );
-        final ingredient = ingRows.map((r) => r[0] as String).toList();
-
-        if (prefs.length != ingredient.length) {
-          return _badRequest(request, 'preference length mismatch');
+        if (preferredIngredients.isEmpty) {
+          return _badRequest(request, 'empty preferred ingredients');
         }
 
-        // 2) true 인 재료만 필터링
-        final preferredIngredients = <String>[];
-        for (int i = 0; i < prefs.length; i++) {
-          if (prefs[i] == true) {
-            preferredIngredients.add(ingredient[i]);
-          }
-        }
-
-        print("-----선택된 재료: $preferredIngredients-----");
-
-        // 3) AI 추천 함수 호출 (너가 구현한 함수)
+        // 3) AI 추천 함수 호출
         final recommended = await aiMadeRecipe(preferredIngredients);
         // recommended 예: { recipeName: ..., ingredients: [...], steps: [...], imageUrl: ... }
 
@@ -217,12 +197,13 @@ Future<void> main() async {
         // 4-1) recipes 저장
         final insertedRecipe = await conn.execute(
           Sql.named('''
-      INSERT INTO recipes (name, description, image_url)
-      VALUES (@n, @d, @img)
-      RETURNING recipe_id, name, description, image_url
+      INSERT INTO recipes (name, time_to_cook, description, image_url)
+      VALUES (@n, @t, @d, @img)
+      RETURNING recipe_id, name, time_to_cook, description, image_url
     '''),
           parameters: {
             'n': recommended['name'],
+            't': recommended['time_to_cook'],
             'd': recommended['description'],
             'img': recommended['imageUrl'],
           },
@@ -242,13 +223,14 @@ Future<void> main() async {
           );
         }
 
-        print("🍳 새 레시피 저장 완료: ID=$recipeId");
+        print("-----새 레시피 저장 완료: ID=$recipeId-----");
 
         // 5) 생성된 레시피 클라이언트에 응답
         _okJson(request, {
           'recipe': {
             'recipeId': recipeId,
             'name': recipe['name'],
+            'timeToCook': recipe['time_to_cook'],
             'description': recipe['description'],
             'imageUrl': recipe['image_url'],
             'ingredient': recommended['ingredient'],
@@ -845,6 +827,7 @@ Future<void> main() async {
 Future<Map<String, dynamic>> aiMadeRecipe(List<String> ingredient) async {
   return {
     'name': 'AI 추천 계란볶음밥',
+    'time_to_cook': '5',
     'description': '선호 재료 기반 자동 생성 레시피',
     'ingredient': ['계란', '밥', '대파'],
     'steps': ['1. 준비한다', '2. 볶는다'],
