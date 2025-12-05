@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fooder_fe/feature/home/recommend_recipe_screen.dart';
 import 'package:fooder_fe/services/api_service.dart';
 import 'package:fooder_fe/shared/constants/app_colors.dart';
 import 'package:fooder_fe/shared/constants/app_text_styles.dart';
@@ -67,6 +68,15 @@ class _PreferenceScreenState extends State<PreferenceScreen> {
       final response = await ApiService.sendPreference(liked);
       debugPrint(response.toString());
       // TODO: 다음 페이지 이동 or 서버 전송
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => RecommendRecipeScreen(
+              response: response,
+              selectedIngredient: liked
+          ),
+        ),
+      );
 
     }
   }

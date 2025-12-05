@@ -831,7 +831,7 @@ Future<Map<String, dynamic>> aiMadeRecipe(List<String> ingredient) async {
     'description': '선호 재료 기반 자동 생성 레시피',
     'ingredient': ['계란', '밥', '대파'],
     'steps': ['1. 준비한다', '2. 볶는다'],
-    'imageUrl': 'https://example.com/image.jpg'
+    'imageUrl': 'https://recipe1.ezmember.co.kr/cache/recipe/2018/04/04/833880e807106a8288be48259b19c4031.jpg'
   };
 }
 
