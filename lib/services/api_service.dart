@@ -48,7 +48,7 @@ class ApiService {
 
   // ---------------- RECIPE ----------------
 
-  static Future<List<String>> getIngredients() async {
+  static Future<List<Map<String, dynamic>>> getIngredients() async {
     final response = await http.get(
       Uri.parse('$baseUrl/api/home/ingredient'),
       headers: await _headers(),
@@ -59,7 +59,15 @@ class ApiService {
     }
 
     final json = jsonDecode(response.body);
-    return (json['ingredient'] as List).cast<String>();
+
+    // 서버 구조: { "ingredients": [ { ingredient: "...", imageUrl: "..."} ] }
+    final list = json['ingredients'] as List;
+
+    // 리스트 안의 요소는 Map<String, dynamic> 형태
+    return list.map((item) => {
+      'ingredient': item['ingredient'],
+      'imageUrl': item['imageUrl'],
+    }).toList();
   }
 
   static Future<Map<String, dynamic>> sendPreference(List<bool> prefs) async {
