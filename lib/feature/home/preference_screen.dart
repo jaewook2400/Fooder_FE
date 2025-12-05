@@ -64,7 +64,8 @@ class _PreferenceScreenState extends State<PreferenceScreen> {
       debugPrint("좋아요: $liked");
       debugPrint("싫어요: $disliked");
 
-      await ApiService.sendPreference(liked);
+      final response = await ApiService.sendPreference(liked);
+      debugPrint(response.toString());
       // TODO: 다음 페이지 이동 or 서버 전송
 
     }
