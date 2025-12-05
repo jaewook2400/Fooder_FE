@@ -37,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    try{
+   try{
       // 1. 로그인 API 호출
       final loginUri = Uri.parse('$baseUrl/api/login').toString();
 
