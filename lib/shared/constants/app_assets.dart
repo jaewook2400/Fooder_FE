@@ -1,5 +1,9 @@
 class AppAssets {
   ///icons
+
+  //logo
+  static const logo = 'assets/logos/logo.png';
+
   //bottom nav bar
   static const home_icon = 'assets/icons/bottom_bar_icons/home_icon.png';
   static const recipe_icon = 'assets/icons/bottom_bar_icons/recipe_icon.png';

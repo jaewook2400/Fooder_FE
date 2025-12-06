@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fooder_fe/shared/constants/app_assets.dart';
 import 'package:fooder_fe/shared/ui/screens/liked_recipe_screen.dart';
 
 class CustomTopBar extends StatelessWidget implements PreferredSizeWidget {
@@ -16,14 +17,13 @@ class CustomTopBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
-      centerTitle: true,
-      automaticallyImplyLeading: false, // 뒤로가기 버튼 제거
+      centerTitle: false, // [수정] true -> false로 변경하여 왼쪽 정렬
+      automaticallyImplyLeading: false,
       iconTheme: const IconThemeData(color: Colors.black),
 
-      // [수정] Text 대신 Image.asset 사용
       title: Image.asset(
-        'assets/images/logo_orange.png', // 실제 로고 이미지 경로로 수정해주세요
-        height: 30, // 로고 크기에 맞게 높이 조절 (보통 24~40 사이)
+        AppAssets.logo,
+        height: 40,
         fit: BoxFit.contain,
       ),
 

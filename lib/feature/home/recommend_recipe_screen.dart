@@ -4,6 +4,9 @@ import 'package:fooder_fe/feature/home/preference_screen.dart';
 import 'package:fooder_fe/shared/constants/app_colors.dart';
 import 'package:fooder_fe/shared/constants/app_text_styles.dart';
 import 'package:fooder_fe/services/api_service.dart';
+import 'package:fooder_fe/shared/ui/bars/custom_top_bar.dart';
+import 'package:fooder_fe/shared/ui/buttons/cancel_button.dart';
+import 'package:fooder_fe/shared/ui/buttons/accept_button.dart';
 
 class RecommendRecipeScreen extends StatefulWidget {
   final Map<String, dynamic> response;
@@ -44,20 +47,10 @@ class _RecommendRecipeScreenState extends State<RecommendRecipeScreen> {
     final ingredients = (recipe["ingredient"] as List).cast<String>();
 
     return Scaffold(
+      appBar: CustomTopBar(),
       backgroundColor: AppColors.main,
       body: Column(
         children: [
-          const SizedBox(height: 50),
-
-          // ---------------------------
-          // TOPBAR (비워둠)
-          // ---------------------------
-          Container(
-            height: 50,
-            alignment: Alignment.center,
-            child: const Text(""),
-          ),
-
           Expanded(
             child: SingleChildScrollView(
               child: Column(
@@ -313,36 +306,20 @@ class _RecommendRecipeScreenState extends State<RecommendRecipeScreen> {
   // 버튼 2개
   // -----------------------------
   Widget _buildButtons(BuildContext context) {
+    final int recipeId = widget.response['recipe']['recipeId'];
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // 다시 선택하기
-        GestureDetector(
-          onTap: () => reject(widget.response['recipe']['recipeId']),
-          child: Container(
-            width: 150,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: AppColors.white,
-              border: Border.all(color: AppColors.main),
-            ),
-            child: Center(
-              child: Text(
-                "다시 선택하기",
-                style: AppTextStyles.pretendard_regular.copyWith(
-                  fontSize: 16,
-                  color: AppColors.orange,
-                ),
-              ),
-            ),
-          ),
+        CancelButton(
+          text: "다시 선택하기",
+          onTap: () => reject(recipeId),
+          width: 150,
         ),
 
         const SizedBox(width: 20),
 
-        // 레시피 선택
-        GestureDetector(
+        AcceptButton(
+          text: "레시피 선택",
           onTap: () {
             Navigator.push(
               context,
@@ -351,23 +328,7 @@ class _RecommendRecipeScreenState extends State<RecommendRecipeScreen> {
               ),
             );
           },
-          child: Container(
-            width: 150,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: AppColors.orange,
-            ),
-            child: Center(
-              child: Text(
-                "레시피 선택",
-                style: AppTextStyles.pretendard_regular.copyWith(
-                  fontSize: 16,
-                  color: AppColors.white,
-                ),
-              ),
-            ),
-          ),
+          width: 150,
         ),
       ],
     );
