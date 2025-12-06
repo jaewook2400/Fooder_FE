@@ -48,6 +48,19 @@ class ApiService {
 
   // ---------------- RECIPE ----------------
 
+  static Future<Map<String, dynamic>> getRecentRecipe() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/home/recent'),
+      headers: await _headers(),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to load recent recipe");
+    }
+
+    return jsonDecode(response.body);
+  }
+
   static Future<List<Map<String, dynamic>>> getIngredients() async {
     final response = await http.get(
       Uri.parse('$baseUrl/api/home/ingredient'),

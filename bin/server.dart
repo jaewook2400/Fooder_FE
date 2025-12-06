@@ -155,6 +155,50 @@ Future<void> main() async {
 
       // --------------- 홈 ---------------
 
+      // GET /api/home/recent (가장 최근 레시피 1개 조회)
+      if (method == 'GET' && path == '/api/home/recent') {
+        // 1. 가장 최근에 추가된 레시피 1개 조회 (recipe_id 기준 내림차순 정렬)
+        final recipeRows = await conn.execute(
+          Sql.named('''
+      SELECT recipe_id, name, time_to_cook, image_url
+      FROM recipes
+      ORDER BY recipe_id DESC
+      LIMIT 1
+    '''),
+        );
+
+        if (recipeRows.isEmpty) {
+          // 레시피가 하나도 없는 경우 빈 객체 또는 null 반환 (상황에 맞게 처리)
+          _okJson(request, {});
+          continue;
+        }
+
+        final r = recipeRows.first.toColumnMap();
+        final recipeId = r['recipe_id'];
+
+        // 2. 해당 레시피의 재료 조회
+        final ingRows = await conn.execute(
+          Sql.named('''
+      SELECT ingredient
+      FROM recipe_ingredients
+      WHERE recipe_id = @id
+    '''),
+          parameters: {'id': recipeId},
+        );
+
+        final ingredient = ingRows.map((row) => row[0] as String).toList();
+
+        // 3. 응답 JSON 생성
+        _okJson(request, {
+          'recipeId': recipeId,
+          'name': r['name'],
+          'timeToCook': r['time_to_cook'],
+          'ingredient': ingredient,
+          'imageUrl': r['image_url'],
+        });
+        continue;
+      }
+
       // GET /api/home/ingredient
       if (method == 'GET' && path == '/api/home/ingredient') {
         // ingredients 테이블에서 모든 재료 조회
