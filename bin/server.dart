@@ -625,10 +625,11 @@ Future<void> main() async {
         if (userRow.isEmpty) return _unauthorized(request, 'user not found');
         final userId = userRow.first[0] as int;
 
-        // 2) recorded된 recipe_id 목록 가져오기
+        // 2) recorded된 recipe_id 및 recorded_at 목록 가져오기
+        // [수정] recorded_at 컬럼 추가 조회
         final recordedRows = await conn.execute(
           Sql.named('''
-      SELECT recipe_id
+      SELECT recipe_id, recorded_at
       FROM user_recorded_recipes
       WHERE user_id = @uid
     '''),
@@ -640,7 +641,21 @@ Future<void> main() async {
           continue;
         }
 
+        // recipe_id 리스트 추출
         final recordedIds = recordedRows.map((r) => r[0] as int).toList();
+
+        // recipe_id -> recorded_at 매핑 (하나의 레시피를 여러 번 기록했을 수도 있으므로 로직 주의)
+        // 여기서는 가장 최근 기록 혹은 단순 매핑으로 처리.
+        // 만약 같은 레시피를 여러 날짜에 기록했다면 구조를 조금 더 복잡하게 가져가야 하지만,
+        // 현재 구조상 1:1 매핑 혹은 단순 리스트 매핑으로 가정하고 진행합니다.
+        final recordedAtMap = <int, String>{};
+        for (final row in recordedRows) {
+          final rid = row[0] as int;
+          final rAt = row[1]; // DateTime or String
+          if (rAt != null) {
+            recordedAtMap[rid] = rAt.toString();
+          }
+        }
 
         // 3) recipe 상세 JOIN해서 가져오기
         final recipesRows = await conn.execute(
@@ -676,14 +691,16 @@ Future<void> main() async {
 
         for (final row in recipesRows) {
           final map = row.toColumnMap();
+          final rId = map['recipe_id'];
 
           result.add({
-            'recipeId': map['recipe_id'],
+            'recipeId': rId,
             'name': map['name'],
             'timeToCook': map['time_to_cook'],
             'description': map['description'],
             'imageUrl': map['image_url'],
-            'ingredient': ingredientMap[map['recipe_id']] ?? [],
+            'ingredient': ingredientMap[rId] ?? [],
+            'recordedAt': recordedAtMap[rId], // [추가] 기록된 날짜 포함
           });
         }
 
