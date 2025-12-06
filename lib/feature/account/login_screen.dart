@@ -100,12 +100,11 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 80),
-                // 로고(이미지 에셋으로 대체할 예정 → 제외 요청)
-                // Image.asset(
-                //   AppAssets.logo_orange,
-                //   scale: 7,
-                // ),
-                const SizedBox(height: 10),
+                Image.asset(
+                  AppAssets.logo,
+                  scale: 5,
+                ),
+                const SizedBox(height: 30),
 
                 // 이메일
                 Align(
@@ -194,15 +193,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: double.infinity,
                   height: 54,
                 ),
-
-                const SizedBox(height: 30),
-
-                Text(
-                  '학교 이메일 인증이 필요합니다\n경희대학교부터 시작합니다',
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.pretendard_regular.copyWith(color: AppColors.grey_4),
-                ),
-                const SizedBox(height: 20),
               ],
             ),
           ),
