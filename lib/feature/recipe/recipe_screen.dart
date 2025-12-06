@@ -42,35 +42,35 @@ class _RecipeScreenState extends State<RecipeScreen> {
     return list;
   }
 
-  // 좋아요 토글 기능 (API 연동)
+  // 좋아요 토글 기능 (API 연동: 좋아요 / 좋아요 취소 분기 처리)
   Future<void> toggleLike(int index) async {
     final item = filteredList[index];
     final int recipeId = item["recipeId"];
-    final bool wasLiked = item["isLiked"];
+    final bool wasLiked = item["isLiked"]; // 변경 전 상태
 
-    // 1. UI 선반영 (Optimistic Update): 기다리지 않고 즉시 아이콘 변경
+    // 1. UI 선반영 (Optimistic Update)
     setState(() {
       item["isLiked"] = !wasLiked;
     });
 
     try {
-      // 2. 서버에 요청 전송
-      // ApiService.likeRecipe는 토글 방식(없으면 추가, 있으면 삭제)으로 동작한다고 가정
-      await ApiService.likeRecipe(recipeId);
-
-      // (선택 사항) 만약 서버가 최신 상태를 반환한다면 그 값으로 확실하게 동기화
-      // final result = await ApiService.likeRecipe(recipeId);
-      // setState(() { item["isLiked"] = result['isLiked']; });
-
+      // 2. 상태에 따라 API 분기 호출
+      if (wasLiked) {
+        // 이미 좋아요 상태였으므로 -> 취소 요청 (DELETE)
+        await ApiService.unlikeRecipe(recipeId);
+      } else {
+        // 좋아요가 아니었으므로 -> 좋아요 요청 (POST)
+        await ApiService.likeRecipe(recipeId);
+      }
     } catch (e) {
-      // 3. 실패 시 롤백 (원래 상태로 되돌림)
+      // 3. 실패 시 롤백
       setState(() {
         item["isLiked"] = wasLiked;
       });
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("좋아요 변경 실패: $e")),
+        SnackBar(content: Text("변경 실패: $e")),
       );
     }
   }
