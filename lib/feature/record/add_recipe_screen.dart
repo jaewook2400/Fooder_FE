@@ -29,7 +29,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
   File? _selectedImage; // 선택된 이미지를 저장할 변수
   String _uploadedImageUrl = "";
   final ImagePicker _picker = ImagePicker();
-  final String _fixedImageUrl = "https://recipe1.ezmember.co.kr/cache/recipe/2018/04/04/833880e807106a8288be48259b19c4031.jpg";
+  final String _fixedImageUrl = "https://www.urbanbrush.net/web/wp-content/uploads/edd/2021/07/urbanbrush-20210720213004046257.jpg";
 
   bool _isLoading = false;
   bool _isImageUploading = false;
@@ -138,7 +138,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
       final Map<String, dynamic> requestData = {
         "name": name,
         "description": description,
-        "imageUrl": _fixedImageUrl,
+        "imageUrl": finalImageUrl,
         "ingredient": ingredients,
         "steps": steps,
         "timeToCook": 30, // 기본값 설정 (필요 시 입력 필드 추가 가능)
