@@ -243,18 +243,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
                             fontSize: 13,
                           ),
                         ),
-
-                        const SizedBox(width: 12),
-
-                        Icon(Icons.person, size: 16, color: AppColors.grey_4),
-                        const SizedBox(width: 4),
-                        Text(
-                          "2-3인분",
-                          style: AppTextStyles.pretendard_regular.copyWith(
-                            color: AppColors.grey_4,
-                            fontSize: 13,
-                          ),
-                        ),
                       ],
                     ),
                   ],

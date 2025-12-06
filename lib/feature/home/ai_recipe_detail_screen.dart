@@ -136,18 +136,6 @@ class _AiRecipeDetailScreenState extends State<AiRecipeDetailScreen> {
                   color: AppColors.grey_4,
                 ),
               ),
-
-              const SizedBox(width: 20),
-
-              Icon(Icons.person, size: 20, color: AppColors.grey_4),
-              const SizedBox(width: 6),
-              Text(
-                "2-3인분",
-                style: AppTextStyles.pretendard_regular.copyWith(
-                  fontSize: 14,
-                  color: AppColors.grey_4,
-                ),
-              ),
             ],
           ),
         ],
