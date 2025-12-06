@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
 import 'secure_storage.dart';
 import 'dart:io';
 
@@ -196,23 +197,32 @@ class ApiService {
   //   return data["imageUrl"] as String;
   // }
 
-  Future<void> uploadImage(File file) async {
-    final bytes = await file.readAsBytes();
-    final base64String = base64Encode(bytes);
-    final filename = file.path.split('/').last;
+  static Future<String> uploadImage(File imageFile) async {
+    final uri = Uri.parse("$baseUrl/upload");
 
-    final uri = Uri.parse('http://localhost:3000/upload');
+    final request = http.MultipartRequest('POST', uri);
+    final headers = await _headers();
+    request.headers.addAll(headers);
 
-    final response = await http.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'file': base64String,
-        'filename': filename,
-      }),
-    );
+    final extension = imageFile.path.split('.').last;
 
-    print(response.body);
+    // http_parser 패키지의 MediaType 필요 (없으면 contentType 라인 제거 가능)
+    request.files.add(await http.MultipartFile.fromPath(
+      'file',
+      imageFile.path,
+      contentType: MediaType('image', extension),
+    ));
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      // [수정] 이미지 URL 반환
+      return json['imageUrl'];
+    } else {
+      throw Exception("Image upload failed: ${response.body}");
+    }
   }
 
   //-----디버그용-----

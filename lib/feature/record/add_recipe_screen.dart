@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:fooder_fe/services/api_service.dart';
 import 'package:fooder_fe/shared/constants/app_colors.dart';
 import 'package:fooder_fe/shared/constants/app_text_styles.dart';
 import 'package:fooder_fe/shared/ui/bars/custom_top_bar.dart';
 import 'package:fooder_fe/shared/ui/buttons/accept_button.dart';
+import 'package:image_picker/image_picker.dart';
 
 class AddRecipeScreen extends StatefulWidget {
   const AddRecipeScreen({super.key});
@@ -23,10 +26,13 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
   final List<TextEditingController> _ingredientControllers = [TextEditingController()];
   final List<TextEditingController> _stepControllers = [TextEditingController()];
 
-  // 하드코딩된 이미지 URL
+  File? _selectedImage; // 선택된 이미지를 저장할 변수
+  String _uploadedImageUrl = "";
+  final ImagePicker _picker = ImagePicker();
   final String _fixedImageUrl = "https://recipe1.ezmember.co.kr/cache/recipe/2018/04/04/833880e807106a8288be48259b19c4031.jpg";
 
   bool _isLoading = false;
+  bool _isImageUploading = false;
 
   @override
   void dispose() {
@@ -51,9 +57,60 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
     });
   }
 
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path); // 화면 표시용 로컬 파일 설정
+          _isImageUploading = true; // 업로드 시작 표시
+        });
+
+        // 선택하자마자 서버로 업로드
+        await _uploadImageToServer();
+      }
+    } catch (e) {
+      print("이미지 선택 오류: $e");
+    }
+  }
+
+  // 3. 서버 업로드 함수 호출
+  Future<void> _uploadImageToServer() async {
+    if (_selectedImage == null) return;
+
+    try {
+      // ★ 여기서 File 객체를 인자로 넣습니다.
+      String uploadedUrl = await ApiService.uploadImage(_selectedImage!);
+
+      setState(() {
+        _uploadedImageUrl = uploadedUrl; // ★ 서버에서 받은 URL 저장
+        _isImageUploading = false; // 업로드 완료
+      });
+
+      print("서버에 저장된 이미지 URL: $uploadedUrl");
+      // 이 URL을 나중에 레시피 저장 API 보낼 때 imageUrl 필드에 넣어서 보냄
+    } catch (e) {
+      print("업로드 실패: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("이미지 업로드 실패: $e")),
+        );
+      }
+    }
+  }
+
   // 레시피 저장 로직
   Future<void> _submitRecipe() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // 이미지 업로드 중이라면 기다리라고 알림
+    if (_isImageUploading) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("이미지 업로드가 진행 중입니다. 잠시만 기다려주세요.")),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -72,6 +129,10 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
           .map((c) => c.text.trim())
           .where((text) => text.isNotEmpty)
           .toList();
+
+      // ★ 최종 이미지 URL 결정: 업로드된 게 있으면 그거 쓰고, 없으면 기본값
+      final String finalImageUrl =
+      _uploadedImageUrl.isNotEmpty ? _uploadedImageUrl : _fixedImageUrl;
 
       // 2. API 요청 데이터 구성
       final Map<String, dynamic> requestData = {
@@ -137,13 +198,58 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
                 const SizedBox(height: 30),
                 _buildSectionTitle("대표 이미지"),
                 const SizedBox(height: 12),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    _fixedImageUrl,
-                    height: 200,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
+
+                GestureDetector(
+                  onTap: _pickImage, // 클릭 시 갤러리 오픈
+                  child: Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: _selectedImage != null
+                            ? Image.file(
+                          _selectedImage!, // 로컬 파일 표시
+                          height: 200,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        )
+                            : Image.network(
+                          _fixedImageUrl, // 기본 이미지 표시
+                          height: 200,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      // 이미지 업로드 중일 때 로딩 표시
+                      if (_isImageUploading)
+                        Positioned.fill(
+                          child: Container(
+                            color: Colors.black.withOpacity(0.5),
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      // 카메라 아이콘 오버레이 (선택 유도)
+                      if (!_isImageUploading)
+                        Positioned(
+                          bottom: 10,
+                          right: 10,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.6),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
 
