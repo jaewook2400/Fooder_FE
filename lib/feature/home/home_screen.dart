@@ -4,6 +4,7 @@ import 'package:fooder_fe/feature/home/preference_screen.dart';
 import 'package:fooder_fe/shared/constants/app_colors.dart';
 import 'package:fooder_fe/shared/constants/app_text_styles.dart';
 import 'package:fooder_fe/shared/ui/bars/bottom_nav_bar.dart';
+import 'package:fooder_fe/shared/ui/bars/custom_top_bar.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -13,6 +14,7 @@ class HomeScreen extends StatelessWidget {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
+        appBar: CustomTopBar(),
         backgroundColor: AppColors.main,
         resizeToAvoidBottomInset: true,
         body: SingleChildScrollView(
@@ -20,9 +22,6 @@ class HomeScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 44),
 
-              // ---------------------------
-              // Top Bar (비워둠)
-              // ---------------------------
               Container(
                 height: 56,
                 alignment: Alignment.center,
