@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fooder_fe/shared/constants/app_assets.dart';
+import 'package:fooder_fe/shared/constants/app_colors.dart';
 import 'package:fooder_fe/shared/ui/screens/liked_recipe_screen.dart';
 
 class CustomTopBar extends StatelessWidget implements PreferredSizeWidget {
@@ -32,7 +33,7 @@ class CustomTopBar extends StatelessWidget implements PreferredSizeWidget {
         IconButton(
           icon: const Icon(
             Icons.favorite_border,
-            color: Colors.black,
+            color: AppColors.grey_5,
           ),
           onPressed: () {
             Navigator.push(
