@@ -38,6 +38,7 @@ class _RecommendRecipeScreenState extends State<RecommendRecipeScreen> {
   Widget build(BuildContext context) {
     final recipe = widget.response["recipe"];
     final name = recipe["name"] ?? "";
+    final timeToCook = recipe["timeToCook"] ?? 30;
     final description = recipe["description"] ?? "";
     final imageUrl = recipe["imageUrl"] ?? "";
     final ingredients = (recipe["ingredient"] as List).cast<String>();
@@ -78,6 +79,7 @@ class _RecommendRecipeScreenState extends State<RecommendRecipeScreen> {
                   _buildMainRecipeCard(
                     name: name,
                     description: description,
+                    timeToCook: timeToCook,
                     imageUrl: imageUrl,
                   ),
 
@@ -164,6 +166,7 @@ class _RecommendRecipeScreenState extends State<RecommendRecipeScreen> {
   Widget _buildMainRecipeCard({
     required String name,
     required String description,
+    required int timeToCook,
     required String imageUrl,
   }) {
     return Container(
@@ -211,17 +214,7 @@ class _RecommendRecipeScreenState extends State<RecommendRecipeScreen> {
                         color: AppColors.grey_4, size: 18),
                     const SizedBox(width: 6),
                     Text(
-                      "30분",
-                      style: AppTextStyles.pretendard_regular.copyWith(
-                        color: AppColors.grey_4,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Icon(Icons.person,
-                        color: AppColors.grey_4, size: 18),
-                    const SizedBox(width: 6),
-                    Text(
-                      "2-3인분",
+                      "${timeToCook.toString()}분",
                       style: AppTextStyles.pretendard_regular.copyWith(
                         color: AppColors.grey_4,
                       ),

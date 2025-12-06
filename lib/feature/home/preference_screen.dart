@@ -65,9 +65,21 @@ class _PreferenceScreenState extends State<PreferenceScreen> {
       debugPrint("좋아요: $liked");
       debugPrint("싫어요: $disliked");
 
+      if (liked.isEmpty) {
+        _showMustSelectDialog();
+        await Future.delayed(const Duration(seconds: 2));
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PreferenceScreen(),
+          )
+        );
+        return; // 서버로 가지 않도록 종료
+      }
+
       final response = await ApiService.sendPreference(liked);
       debugPrint(response.toString());
-      // TODO: 다음 페이지 이동 or 서버 전송
+
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -80,6 +92,47 @@ class _PreferenceScreenState extends State<PreferenceScreen> {
 
     }
   }
+  void _showMustSelectDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppColors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            "재료 선택 필요",
+            style: AppTextStyles.pretendard_regular.copyWith(
+              color: AppColors.grey_4,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            "최소 1개 이상의 좋아요 재료를 선택해주세요.",
+            style: AppTextStyles.pretendard_regular.copyWith(
+              color: AppColors.grey_4,
+              fontSize: 15,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                "확인",
+                style: AppTextStyles.pretendard_regular.copyWith(
+                  color: AppColors.main,
+                  fontSize: 16,
+                ),
+              ),
+            )
+          ],
+        );
+      },
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
