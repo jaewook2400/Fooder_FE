@@ -766,6 +766,11 @@ Future<void> main() async {
         final recipeName = body['name'] ?? '';
         final description = body['description'] ?? '';
         final imageUrl = body['imageUrl'] ?? '';
+        // [수정] timeToCook은 int로 변환 (기본값 0)
+        final timeToCook = body['timeToCook'] is int
+            ? body['timeToCook']
+            : int.tryParse(body['timeToCook'].toString()) ?? 0;
+        final steps = (body['steps'] as List?)?.cast<String>() ?? [];
         final ingredient = (body['ingredient'] as List?)?.cast<String>() ?? [];
 
         if (recipeName.isEmpty || ingredient.isEmpty) {
@@ -781,17 +786,18 @@ Future<void> main() async {
         if (userRow.isEmpty) return _unauthorized(request, 'user not found');
         final userId = userRow.first[0] as int;
 
-        // 2) recipes 테이블에 저장
+        // 2) recipes 테이블에 저장 (time_to_cook 추가)
         final inserted = await conn.execute(
           Sql.named('''
-      INSERT INTO recipes (name, description, image_url)
-      VALUES (@n, @d, @img)
-      RETURNING recipe_id, name, description, image_url
+      INSERT INTO recipes (name, description, image_url, time_to_cook)
+      VALUES (@n, @d, @img, @time)
+      RETURNING recipe_id, name, description, image_url, time_to_cook
     '''),
           parameters: {
             'n': recipeName,
             'd': description,
             'img': imageUrl,
+            'time': timeToCook, // [추가] 조리 시간 저장
           },
         );
 
@@ -809,7 +815,23 @@ Future<void> main() async {
           );
         }
 
-        // 4) user_recorded_recipes 저장
+        // 4) [추가] 조리 순서(Steps) 저장
+        // recipe_steps 테이블이 있다고 가정 (step_order, description 컬럼 필요)
+        for (int i = 0; i < steps.length; i++) {
+          await conn.execute(
+            Sql.named('''
+        INSERT INTO recipe_steps (recipe_id, step_order, description)
+        VALUES (@id, @order, @desc)
+      '''),
+            parameters: {
+              'id': recipeId,
+              'order': i + 1, // 1부터 시작하는 순서
+              'desc': steps[i],
+            },
+          );
+        }
+
+        // 5) user_recorded_recipes 저장
         await conn.execute(
           Sql.named('''
       INSERT INTO user_recorded_recipes (user_id, recipe_id)
@@ -820,7 +842,7 @@ Future<void> main() async {
 
         print("-----수동 레시피 추가 완료 → recipeId=$recipeId-----");
 
-        // 5) 클라이언트에 응답
+        // 6) 클라이언트에 응답
         _okJson(request, {
           'message': 'recorded added',
           'recipe': {
@@ -828,7 +850,9 @@ Future<void> main() async {
             'name': recipe['name'],
             'description': recipe['description'],
             'imageUrl': recipe['image_url'],
+            'timeToCook': recipe['time_to_cook'],
             'ingredient': ingredient,
+            'steps': steps,
           }
         });
         continue;
