@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fooder_fe/feature/recipe/recipe_detail_screen.dart';
 import 'package:fooder_fe/feature/record/add_recipe_screen.dart';
 import 'package:fooder_fe/services/api_service.dart';
 import 'package:fooder_fe/shared/constants/app_colors.dart';
@@ -217,78 +218,90 @@ class _RecordScreenState extends State<RecordScreen> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              )
-            ],
-          ),
-
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 제목 + 삭제 버튼
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    item["name"] ?? "",
-                    style: AppTextStyles.pretendard_regular.copyWith(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.grey_4,
-                    ),
-                  ),
-                  Text(
-                    "삭제",
-                    style: AppTextStyles.pretendard_regular.copyWith(
-                      fontSize: 14,
-                      color: AppColors.grey_4.withOpacity(0.5),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 6),
-
-              Text(
-                item["description"] ?? "",
-                style: AppTextStyles.pretendard_regular.copyWith(
-                  fontSize: 14,
-                  color: AppColors.grey_4,
+        return TextButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => RecipeDetailScreen(
+                  recipeId: item["recipeId"],
                 ),
-              ),
-
-              const SizedBox(height: 12),
-
-              Row(
-                children: [
-                  Icon(Icons.access_time,
-                      size: 18, color: AppColors.grey_4),
-                  const SizedBox(width: 6),
-                  Text(
-                    "${item["timeToCook"] ?? ""}분",
-                    style: AppTextStyles.pretendard_regular.copyWith(
-                      color: AppColors.grey_4,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
               )
-            ],
+            );
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                )
+              ],
+            ),
+
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 제목 + 삭제 버튼
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      item["name"] ?? "",
+                      style: AppTextStyles.pretendard_regular.copyWith(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.grey_4,
+                      ),
+                    ),
+                    Text(
+                      "삭제",
+                      style: AppTextStyles.pretendard_regular.copyWith(
+                        fontSize: 14,
+                        color: AppColors.grey_4.withOpacity(0.5),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 6),
+
+                Text(
+                  item["description"] ?? "",
+                  style: AppTextStyles.pretendard_regular.copyWith(
+                    fontSize: 14,
+                    color: AppColors.grey_4,
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                Row(
+                  children: [
+                    Icon(Icons.access_time,
+                        size: 18, color: AppColors.grey_4),
+                    const SizedBox(width: 6),
+                    Text(
+                      "${item["timeToCook"] ?? ""}분",
+                      style: AppTextStyles.pretendard_regular.copyWith(
+                        color: AppColors.grey_4,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
           ),
         );
       },

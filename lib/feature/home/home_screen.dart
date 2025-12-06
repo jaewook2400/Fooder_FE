@@ -299,7 +299,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             "$timeToCook분",
                             style: AppTextStyles.pretendard_regular.copyWith(
                               fontSize: 14,
-                              color: AppColors.orange,
+                              color: AppColors.grey_4,
                             ),
                           ),
                         ],
@@ -311,7 +311,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         maxLines: 1,
                         style: AppTextStyles.pretendard_regular.copyWith(
                           fontSize: 13,
-                          color: AppColors.orange,
+                          color: AppColors.grey_4,
                         ),
                       ),
                     ],

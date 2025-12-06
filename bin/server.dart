@@ -839,7 +839,7 @@ Future<void> main() async {
         for (int i = 0; i < steps.length; i++) {
           await conn.execute(
             Sql.named('''
-        INSERT INTO recipe_steps (recipe_id, step_order, description)
+        INSERT INTO recipe_steps (recipe_id, step_order, step_text)
         VALUES (@id, @order, @desc)
       '''),
             parameters: {

@@ -90,13 +90,13 @@ class _BottomItem extends StatelessWidget {
           Image.asset(
             iconPath,
             height: 28,
-            color: isActive ? AppColors.main : AppColors.grey_4,
+            color: isActive ? AppColors.orange : AppColors.grey_4,
           ),
           const SizedBox(height: 2),
           Text(
             label,
             style: AppTextStyles.pretendard_regular.copyWith(
-              color: isActive ? AppColors.main : AppColors.grey_4,
+              color: isActive ? AppColors.orange : AppColors.grey_4,
               fontSize: 12,
             ),
           ),
