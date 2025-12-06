@@ -211,9 +211,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
                     Text(
                       name,
                       style: AppTextStyles.pretendard_regular.copyWith(
-                        fontSize: 18,
+                        fontSize: 17,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.grey_4,
+                        color: AppColors.orange,
                       ),
                     ),
 
@@ -257,7 +257,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                 padding: const EdgeInsets.only(right: 16),
                 child: Icon(
                   item["isLiked"] ? Icons.favorite : Icons.favorite_border,
-                  color: AppColors.main,
+                  color: AppColors.orange,
                   size: 26,
                 ),
               ),

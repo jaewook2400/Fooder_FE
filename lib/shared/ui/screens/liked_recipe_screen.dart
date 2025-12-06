@@ -53,7 +53,7 @@ class _LikedRecipeScreenState extends State<LikedRecipeScreen> {
           ? _buildEmptyView()
           : ListView.builder(
         padding: const EdgeInsets.symmetric(
-            horizontal: 20, vertical: 20),
+            horizontal: 18, vertical: 12),
         itemCount: likedRecipes.length,
         itemBuilder: (context, index) {
           final item = likedRecipes[index];
@@ -100,7 +100,7 @@ class _LikedRecipeScreenState extends State<LikedRecipeScreen> {
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -141,9 +141,9 @@ class _LikedRecipeScreenState extends State<LikedRecipeScreen> {
                   Text(
                     name,
                     style: AppTextStyles.pretendard_regular.copyWith(
-                      fontSize: 18,
+                      fontSize: 17,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: AppColors.orange,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -155,7 +155,7 @@ class _LikedRecipeScreenState extends State<LikedRecipeScreen> {
                       fontSize: 14,
                       color: AppColors.grey_4,
                     ),
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 10),

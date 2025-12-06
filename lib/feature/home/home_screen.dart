@@ -81,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: AppTextStyles.pretendard_regular.copyWith(
               fontSize: 22,
               fontWeight: FontWeight.w600,
-              color: AppColors.grey_4,
+              color: AppColors.orange,
             ),
             textAlign: TextAlign.center,
           ),
@@ -134,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: AppTextStyles.pretendard_regular.copyWith(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.grey_4,
+                    color: AppColors.orange,
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -142,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ">",
                   style: AppTextStyles.pretendard_regular.copyWith(
                     fontSize: 22,
-                    color: AppColors.grey_4,
+                    color: AppColors.orange,
                   ),
                 ),
               ],
@@ -166,13 +166,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildRecentTitle() {
     return Container(
       width: 327,
+      padding: EdgeInsets.only(left: 10),
       alignment: Alignment.centerLeft,
       child: Text(
         "최근에 추가된 레시피", // 텍스트 변경
         style: AppTextStyles.pretendard_regular.copyWith(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: AppColors.grey_4,
+          color: AppColors.grey_5,
         ),
       ),
     );
@@ -284,7 +285,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: AppTextStyles.pretendard_regular.copyWith(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.grey_4,
+                          color: AppColors.orange,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -298,7 +299,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             "$timeToCook분",
                             style: AppTextStyles.pretendard_regular.copyWith(
                               fontSize: 14,
-                              color: AppColors.grey_4,
+                              color: AppColors.orange,
                             ),
                           ),
                         ],
@@ -310,7 +311,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         maxLines: 1,
                         style: AppTextStyles.pretendard_regular.copyWith(
                           fontSize: 13,
-                          color: AppColors.grey_4,
+                          color: AppColors.orange,
                         ),
                       ),
                     ],
