@@ -9,6 +9,7 @@ class AppColors {
   static const main = Color(0xFFFFE896);
   static const main_50per = Color(0x80FFE896);
   static const main_30per = Color(0x4DFFE896);
+  static const orange = Color(0xFFF0B100);
 
   ///회색 계열
   static const grey_1 = Color(0xFFF3F3F3);

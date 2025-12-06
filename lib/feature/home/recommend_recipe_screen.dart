@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:fooder_fe/feature/home/ai_recipe_detail_screen.dart';
+import 'package:fooder_fe/feature/home/preference_screen.dart';
 import 'package:fooder_fe/shared/constants/app_colors.dart';
 import 'package:fooder_fe/shared/constants/app_text_styles.dart';
+import 'package:fooder_fe/services/api_service.dart';
 
 class RecommendRecipeScreen extends StatefulWidget {
   final Map<String, dynamic> response;
@@ -17,6 +20,20 @@ class RecommendRecipeScreen extends StatefulWidget {
 }
 
 class _RecommendRecipeScreenState extends State<RecommendRecipeScreen> {
+
+  void reject(int recipeId){
+    //1. delete api 호출하는 함수 호출
+    ApiService.deleteRecipe(recipeId);
+
+    //2. 다시 선호도 조사 페이지로 이동
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const PreferenceScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final recipe = widget.response["recipe"];
@@ -26,7 +43,7 @@ class _RecommendRecipeScreenState extends State<RecommendRecipeScreen> {
     final ingredients = (recipe["ingredient"] as List).cast<String>();
 
     return Scaffold(
-      backgroundColor: AppColors.white,
+      backgroundColor: AppColors.main,
       body: Column(
         children: [
           const SizedBox(height: 50),
@@ -308,7 +325,7 @@ class _RecommendRecipeScreenState extends State<RecommendRecipeScreen> {
       children: [
         // 다시 선택하기
         GestureDetector(
-          onTap: () => Navigator.pop(context),
+          onTap: () => reject(widget.response['recipe']['recipeId']),
           child: Container(
             width: 150,
             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -322,7 +339,7 @@ class _RecommendRecipeScreenState extends State<RecommendRecipeScreen> {
                 "다시 선택하기",
                 style: AppTextStyles.pretendard_regular.copyWith(
                   fontSize: 16,
-                  color: AppColors.grey_4,
+                  color: AppColors.orange,
                 ),
               ),
             ),
@@ -334,14 +351,19 @@ class _RecommendRecipeScreenState extends State<RecommendRecipeScreen> {
         // 레시피 선택
         GestureDetector(
           onTap: () {
-            // TODO: next screen
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => AiRecipeDetailScreen(response: widget.response),
+              ),
+            );
           },
           child: Container(
             width: 150,
             padding: const EdgeInsets.symmetric(vertical: 14),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
-              color: AppColors.main,
+              color: AppColors.orange,
             ),
             child: Center(
               child: Text(
