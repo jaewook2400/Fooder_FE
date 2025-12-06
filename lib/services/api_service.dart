@@ -160,6 +160,8 @@ class ApiService {
       headers: await _headers(),
     );
 
+    print(res.body);
+
     final json = jsonDecode(res.body);
     return json["recipes"] as List<dynamic>;
   }

@@ -245,7 +245,7 @@ class _RecordScreenState extends State<RecordScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    item["name"],
+                    item["name"] ?? "",
                     style: AppTextStyles.pretendard_regular.copyWith(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -280,20 +280,7 @@ class _RecordScreenState extends State<RecordScreen> {
                       size: 18, color: AppColors.grey_4),
                   const SizedBox(width: 6),
                   Text(
-                    "${item["timeToCook"]}분",
-                    style: AppTextStyles.pretendard_regular.copyWith(
-                      color: AppColors.grey_4,
-                      fontSize: 14,
-                    ),
-                  ),
-
-                  const SizedBox(width: 14),
-
-                  Icon(Icons.person,
-                      size: 18, color: AppColors.grey_4),
-                  const SizedBox(width: 6),
-                  Text(
-                    "1-2인분", // 서버에 인분 정보 없으므로 placeholder
+                    "${item["timeToCook"] ?? ""}분",
                     style: AppTextStyles.pretendard_regular.copyWith(
                       color: AppColors.grey_4,
                       fontSize: 14,
