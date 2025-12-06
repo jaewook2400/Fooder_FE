@@ -223,6 +223,23 @@ Future<void> main() async {
           );
         }
 
+        // 4-3) recipe_steps 저장
+        final steps = (recommended['steps'] as List?)?.cast<String>() ?? [];
+
+        for (int i = 0; i < steps.length; i++) {
+          await conn.execute(
+            Sql.named('''
+        INSERT INTO recipe_steps (recipe_id, step_order, step_text)
+        VALUES (@id, @order, @text)
+      '''),
+            parameters: {
+              'id': recipeId,
+              'order': i + 1,   // step_order는 1부터 시작
+              'text': steps[i],
+            },
+          );
+        }
+
         print("-----새 레시피 저장 완료: ID=$recipeId-----");
 
         // 5) 생성된 레시피 클라이언트에 응답
@@ -234,6 +251,7 @@ Future<void> main() async {
             'description': recipe['description'],
             'imageUrl': recipe['image_url'],
             'ingredient': recommended['ingredient'],
+            'steps': steps,
           }
         });
         continue;
