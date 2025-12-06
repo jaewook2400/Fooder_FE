@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fooder_fe/services/api_service.dart';
 import 'package:fooder_fe/shared/constants/app_colors.dart';
 import 'package:fooder_fe/shared/constants/app_text_styles.dart';
+import 'package:fooder_fe/shared/ui/bars/custom_top_bar.dart';
 import 'package:fooder_fe/shared/ui/buttons/accept_button.dart';
 import 'package:fooder_fe/shared/ui/buttons/cancel_button.dart';
 
@@ -26,6 +27,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: CustomTopBar(),
       backgroundColor: AppColors.main,
       // FutureBuilder를 사용하여 비동기 데이터 처리
       body: FutureBuilder<Map<String, dynamic>>(
@@ -63,8 +65,6 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
 
           return Column(
             children: [
-              _buildTopBar(context),
-
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
@@ -90,54 +90,67 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   }
 
   // -----------------------------
-  // Top Bar (뒤로가기만)
-  // -----------------------------
-  Widget _buildTopBar(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        height: 50,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: Row(
-          children: [
-            GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Icon(
-                Icons.arrow_back,
-                color: AppColors.grey_4,
-                size: 26,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // -----------------------------
   // 상단 요리 이미지
   // -----------------------------
   Widget _buildHeaderImage(String imageUrl) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(0),
-      child: imageUrl.isNotEmpty
-          ? Image.network(
-        imageUrl,
-        width: double.infinity,
-        height: 180,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
+    return Stack(
+      children: [
+        // 1. 이미지를 먼저 배치 (배경)
+        ClipRRect(
+          borderRadius: BorderRadius.circular(0),
+          child: imageUrl.isNotEmpty
+              ? Image.network(
+            imageUrl,
+            width: double.infinity,
+            height: 180,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                height: 180,
+                color: Colors.grey[300],
+                child: const Center(child: Icon(Icons.broken_image)),
+              );
+            },
+          )
+              : Container(
             height: 180,
             color: Colors.grey[300],
-            child: const Center(child: Icon(Icons.broken_image)),
-          );
-        },
-      )
-          : Container(
-        height: 180,
-        color: Colors.grey[300],
-        child: const Center(child: Icon(Icons.image)),
-      ),
+            child: const Center(child: Icon(Icons.image)),
+          ),
+        ),
+
+        // 2. 뒤로가기 버튼을 나중에 배치 (이미지 위로 올라옴)
+        Positioned(
+          top: 0,
+          left: 0,
+          child: SafeArea( // SafeArea 추가 권장 (상단바 영역 침범 방지)
+            child: Container(
+              height: 50,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      // 버튼이 잘 보이도록 반투명 배경 추가 (선택 사항)
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.7),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.arrow_back,
+                        color: AppColors.grey_4,
+                        size: 26,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
