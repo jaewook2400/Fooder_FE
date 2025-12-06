@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'secure_storage.dart';
+import 'dart:io';
 
 class ApiService {
   static const String baseUrl = "http://10.0.2.2:8080"; // ANDROID EMULATOR
@@ -185,17 +186,34 @@ class ApiService {
     return jsonDecode(res.body);
   }
 
-  static Future<String> createImageUrl() async {
-    final res = await http.post(
-      Uri.parse("$baseUrl/api/imageUrl"),
-      headers: await _headers(),
+  // static Future<String> createImageUrl() async {
+  //   final res = await http.post(
+  //     Uri.parse("$baseUrl/api/imageUrl"),
+  //     headers: await _headers(),
+  //   );
+  //
+  //   final data = jsonDecode(res.body);
+  //   return data["imageUrl"] as String;
+  // }
+
+  Future<void> uploadImage(File file) async {
+    final bytes = await file.readAsBytes();
+    final base64String = base64Encode(bytes);
+    final filename = file.path.split('/').last;
+
+    final uri = Uri.parse('http://localhost:3000/upload');
+
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'file': base64String,
+        'filename': filename,
+      }),
     );
 
-    final data = jsonDecode(res.body);
-    return data["imageUrl"] as String;
+    print(response.body);
   }
-
-
 
   //-----디버그용-----
 

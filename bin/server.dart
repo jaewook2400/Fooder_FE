@@ -3,6 +3,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:postgres/postgres.dart';
+import 'package:mime/mime.dart'; // 추가
+import 'dart:typed_data'; // Uint8List 사용을 위해 필요
 
 Future<void> main() async {
 
@@ -879,11 +881,96 @@ Future<void> main() async {
 
       // --------------- 이미지 URL 생성(Mock) ---------------
 
-      // POST /api/imageUrl
-      if (method == 'POST' && path == '/api/imageUrl') {
-        final seed = DateTime.now().millisecondsSinceEpoch;
-        final url = 'https://picsum.photos/seed/$seed/300/400';
-        _okJson(request, {'imageUrl': url});
+      // 정적 이미지 파일 서빙 (GET /images/...)
+      // 이거 통해서 업로드된 이미지를 URL로 볼 수 있음
+      if (method == 'GET' && path.startsWith('/images/')) {
+        final fileName = path.replaceFirst('/images/', '');
+        // 프로젝트 루트의 public/images 폴더를 바라봅니다.
+        final file = File('public/images/$fileName');
+
+        if (await file.exists()) {
+          final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
+          request.response.headers.contentType = ContentType.parse(mimeType);
+          await file.openRead().pipe(request.response);
+          // pipe가 response를 close하므로 return
+          return;
+        } else {
+          return _notFound(request, 'Image not found');
+        }
+      }
+
+      // POST /api/imageUrl (이미지 업로드)
+      if (method == 'POST' && path == '/upload') {
+        try {
+          final contentType = request.headers.contentType;
+
+          // 1. Multipart 요청인지 확인
+          if (contentType == null || contentType.mimeType != 'multipart/form-data') {
+            return _badRequest(request, 'Not a multipart request');
+          }
+
+          // 2. Boundary 추출 및 파싱 준비
+          final boundary = contentType.parameters['boundary']!;
+          final transformer = MimeMultipartTransformer(boundary);
+
+          // 3. Stream 데이터 변환
+          final bodyStream = request.map((chunk) => Uint8List.fromList(chunk));
+          final parts = await transformer.bind(bodyStream).toList();
+
+          String? savedFileName;
+
+          // 4. 파트 순회하며 파일 저장
+          for (final part in parts) {
+            // 헤더에서 content-disposition 확인
+            final contentDisposition = part.headers['content-disposition'];
+
+            // 파일 필드인지 확인 (보통 filename 파라미터가 있음)
+            if (contentDisposition != null && contentDisposition.contains('filename=')) {
+
+              // 확장자 추출 (간단하게)
+              // 실제로는 헤더 파싱을 더 정교하게 하거나 mimeType을 보고 결정하는 게 좋음
+              String extension = '.jpg';
+              if (part.headers['content-type']?.contains('png') == true) extension = '.png';
+
+              // 파일명 생성 (충돌 방지를 위해 시간값 사용)
+              final filename = 'img_${DateTime.now().millisecondsSinceEpoch}$extension';
+
+              // 저장할 폴더 생성 (없으면 생성)
+              final directory = Directory('public/images');
+              if (!await directory.exists()) {
+                await directory.create(recursive: true);
+              }
+
+              // 파일 쓰기
+              final file = File('${directory.path}/$filename');
+              final sink = file.openWrite();
+              await part.pipe(sink); // 스트림을 파일에 씀
+
+              savedFileName = filename;
+              break; // 파일 하나만 처리하고 종료 (여러 개면 로직 수정 필요)
+            }
+          }
+
+          if (savedFileName != null) {
+            // 5. 접근 가능한 URL 생성
+            // request.requestedUri.host 등을 사용하여 현재 서버 주소 기반 URL 생성
+            final host = request.requestedUri.host;
+            final port = request.requestedUri.port;
+
+            // 에뮬레이터 사용 시 localhost 대신 10.0.2.2가 필요할 수 있으나,
+            // 서버 입장에서는 자신의 주소를 반환하면 됨.
+            // 클라이언트가 접속한 주소 그대로 반환
+            final imageUrl = 'http://$host:$port/images/$savedFileName';
+
+            _okJson(request, {'imageUrl': imageUrl});
+          } else {
+            _badRequest(request, 'No file uploaded');
+          }
+
+        } catch (e) {
+          print("Upload Error: $e");
+          _serverError(request, 'Upload failed: $e');
+        }
         continue;
       }
 
