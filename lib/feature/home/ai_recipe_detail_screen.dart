@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fooder_fe/shared/constants/app_colors.dart';
 import 'package:fooder_fe/shared/constants/app_text_styles.dart';
+import 'package:fooder_fe/shared/ui/buttons/accept_button.dart';
+import 'package:fooder_fe/shared/ui/buttons/cancel_button.dart';
 
 class AiRecipeDetailScreen extends StatefulWidget {
   final Map<String, dynamic> response;
@@ -41,6 +43,8 @@ class _AiRecipeDetailScreenState extends State<AiRecipeDetailScreen> {
                   _buildIngredientSection(ingredients),
                   const SizedBox(height: 20),
                   _buildStepSection(steps),
+                  const SizedBox(height: 40),
+                  _buildBottomButtons(),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -291,6 +295,35 @@ class _AiRecipeDetailScreenState extends State<AiRecipeDetailScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBottomButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // 홈으로 (SecondaryButton)
+        CancelButton(
+          text: "홈으로",
+          onTap: () {
+            Navigator.pushNamed(context, '/home');
+          },
+          width: 150,
+        ),
+
+        const SizedBox(width: 20),
+
+        // 레시피 저장 (PrimaryButton)
+        AcceptButton(
+          text: "레시피 저장",
+          onTap: () {
+            // TODO: 레시피 저장 API 호출 로직 구현
+            // 그 이후에 record로 이동해서 저장한 레시피가 바로 뜨도록
+            Navigator.pushNamed(context, '/record');
+          },
+          width: 150,
+        ),
+      ],
     );
   }
 }
