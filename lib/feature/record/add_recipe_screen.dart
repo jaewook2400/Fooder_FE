@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fooder_fe/services/api_service.dart';
 import 'package:fooder_fe/shared/constants/app_colors.dart';
 import 'package:fooder_fe/shared/constants/app_text_styles.dart';
@@ -21,6 +22,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
   // 입력 컨트롤러
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
+  final TextEditingController _timeController = TextEditingController();
 
   // 재료와 조리 순서는 여러 개일 수 있으므로 리스트로 관리
   final List<TextEditingController> _ingredientControllers = [TextEditingController()];
@@ -38,19 +40,20 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
   void dispose() {
     _nameController.dispose();
     _descController.dispose();
+    _timeController.dispose();
     for (var c in _ingredientControllers) c.dispose();
     for (var c in _stepControllers) c.dispose();
     super.dispose();
   }
 
-  // 재료 입력 필드 추가
+  // 재료 입력 필드
   void _addIngredientField() {
     setState(() {
       _ingredientControllers.add(TextEditingController());
     });
   }
 
-  // 조리 순서 입력 필드 추가
+  // 조리 순서 입력 필드
   void _addStepField() {
     setState(() {
       _stepControllers.add(TextEditingController());
@@ -80,7 +83,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
     if (_selectedImage == null) return;
 
     try {
-      // ★ 여기서 File 객체를 인자로 넣습니다.
+      // ★ 여기서 File 객체를 인자로
       String uploadedUrl = await ApiService.uploadImage(_selectedImage!);
 
       setState(() {
@@ -118,6 +121,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
       // 1. 데이터 가공
       final name = _nameController.text;
       final description = _descController.text;
+      final int timeToCook = int.tryParse(_timeController.text) ?? 0;
 
       // 빈 칸은 제외하고 리스트 생성
       final ingredients = _ingredientControllers
@@ -141,7 +145,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
         "imageUrl": finalImageUrl,
         "ingredient": ingredients,
         "steps": steps,
-        "timeToCook": 30, // 기본값 설정 (필요 시 입력 필드 추가 가능)
+        "timeToCook": timeToCook,
       };
 
       // 3. API 호출
@@ -193,6 +197,19 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
                   label: "간단한 설명",
                   hint: "예: 누구나 좋아하는 매콤한 볶음밥",
                   maxLines: 2,
+                ),
+                const SizedBox(height: 12),
+                // [추가] 조리 시간 입력 필드
+                _buildTextField(
+                  controller: _timeController,
+                  label: "조리 시간 (분)",
+                  hint: "예: 30",
+                  keyboardType: TextInputType.number, // 숫자 키패드
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly
+                  ], // 숫자만 입력 가능
+                  validator: (v) =>
+                  v == null || v.isEmpty ? "조리 시간을 입력해주세요" : null,
                 ),
 
                 const SizedBox(height: 30),
@@ -308,6 +325,8 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
     String? hint,
     int maxLines = 1,
     String? Function(String?)? validator,
+    TextInputType? keyboardType, // [추가] 키보드 타입 설정 가능하도록
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -326,9 +345,6 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
         ),
         // 2. 텍스트 필드 컨테이너
         Container(
-          // 높이를 고정하지 않고 내용물에 맞게 늘어나도록 설정하거나,
-          // 필요하다면 최소 높이만 지정하는 것이 좋습니다.
-          // 여기서는 maxLines가 1일 때만 높이를 고정하고, 그 외엔 유동적으로 둡니다.
           height: maxLines == 1 ? 50 : null,
           decoration: BoxDecoration(
             color: Colors.white,
@@ -345,6 +361,8 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
             controller: controller,
             maxLines: maxLines,
             validator: validator,
+            keyboardType: keyboardType,
+            inputFormatters: inputFormatters,
             style: const TextStyle(fontSize: 15), // 입력 글자 크기 조정
             decoration: InputDecoration(
               // labelText 제거 (바깥으로 뺐으므로)
