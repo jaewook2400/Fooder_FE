@@ -352,9 +352,10 @@ Future<void> main() async {
         final userId = userRows.first[0] as int;
 
         // 2) 좋아요한 레시피 조회 (JOIN)
+        // [수정] SELECT 절에 r.time_to_cook 추가
         final rows = await conn.execute(
           Sql.named('''
-      SELECT r.recipe_id, r.name, r.description, r.image_url
+      SELECT r.recipe_id, r.name, r.description, r.image_url, r.time_to_cook
       FROM user_liked_recipes ul
       JOIN recipes r ON ul.recipe_id = r.recipe_id
       WHERE ul.user_id = @uid
@@ -368,6 +369,7 @@ Future<void> main() async {
           "name": row[1],
           "description": row[2],
           "imageUrl": row[3],
+          "timeToCook": row[4], // [수정] 응답 JSON에 timeToCook 매핑 (인덱스 4)
         }).toList();
 
         _okJson(request, {
