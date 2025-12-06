@@ -4,7 +4,6 @@ import 'package:fooder_fe/shared/constants/app_colors.dart';
 import 'package:fooder_fe/shared/constants/app_text_styles.dart';
 import 'package:fooder_fe/shared/ui/bars/custom_top_bar.dart';
 import 'package:fooder_fe/shared/ui/buttons/accept_button.dart';
-import 'package:fooder_fe/shared/ui/buttons/primary_button.dart';
 
 class AddRecipeScreen extends StatefulWidget {
   const AddRecipeScreen({super.key});

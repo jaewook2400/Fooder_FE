@@ -264,11 +264,37 @@ class _RecordScreenState extends State<RecordScreen> {
                         color: AppColors.grey_4,
                       ),
                     ),
-                    Text(
-                      "삭제",
-                      style: AppTextStyles.pretendard_regular.copyWith(
-                        fontSize: 14,
-                        color: AppColors.grey_4.withOpacity(0.5),
+                    TextButton(
+                      onPressed: () async {
+                        try {
+                          // 1. 서버에 삭제 요청 (완료될 때까지 대기)
+                          await ApiService.deleteRecipe(item['recipeId']);
+
+                          // 2. 요청 성공 시, 로컬 데이터(recordMap)에서 해당 항목 제거 및 화면 갱신
+                          if (context.mounted) {
+                            setState(() {
+                              // 현재 보고 있는 날짜(key)의 리스트에서 해당 아이템 제거
+                              recordMap[key]?.remove(item);
+                            });
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("기록이 삭제되었습니다.")),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("삭제 실패: $e")),
+                            );
+                          }
+                        }
+                      },
+                      child: Text(
+                        "삭제",
+                        style: AppTextStyles.pretendard_regular.copyWith(
+                          fontSize: 14,
+                          color: AppColors.grey_4.withOpacity(0.5),
+                        ),
                       ),
                     ),
                   ],
