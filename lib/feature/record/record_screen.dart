@@ -62,11 +62,15 @@ class _RecordScreenState extends State<RecordScreen> {
       bottomNavigationBar: BottomNavBar(currentRoute: BottomNavBar.recordRoute),
 
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => AddRecipeScreen()),
           );
+
+          if (result == true) {
+            _loadRecords();
+          }
         },
         backgroundColor: AppColors.main,
         child: Icon(Icons.add, color: AppColors.white, size: 32),
