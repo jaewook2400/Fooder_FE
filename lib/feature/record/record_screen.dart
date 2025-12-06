@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fooder_fe/feature/record/add_recipe_screen.dart';
 import 'package:fooder_fe/services/api_service.dart';
 import 'package:fooder_fe/shared/constants/app_colors.dart';
 import 'package:fooder_fe/shared/constants/app_text_styles.dart';
@@ -15,7 +16,7 @@ class RecordScreen extends StatefulWidget {
 
 class _RecordScreenState extends State<RecordScreen> {
   DateTime focusedDay = DateTime.now();
-  DateTime? selectedDay;
+  DateTime? selectedDay = DateTime.now();
 
   Map<DateTime, List<Map<String, dynamic>>> recordMap = {};
   bool isLoading = true;
@@ -61,7 +62,10 @@ class _RecordScreenState extends State<RecordScreen> {
 
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: 수동 추가
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AddRecipeScreen()),
+          );
         },
         backgroundColor: AppColors.main,
         child: Icon(Icons.add, color: AppColors.white, size: 32),
