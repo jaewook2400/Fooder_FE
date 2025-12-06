@@ -801,19 +801,19 @@ Future<void> main() async {
       }
 
       // GET /api/debug/userinfo -- 디버깅용 API!!
-      if (method == 'GET' && path == '/api/debug/userinfo') {
-        final pretty = const JsonEncoder.withIndent('  ').convert({
-          'userInfo': userInfo
-        });
-
-        request.response
-          ..statusCode = HttpStatus.ok
-          ..headers.contentType = ContentType.json
-          ..write(pretty)
-          ..close();
-
-        continue;
-      }
+      // if (method == 'GET' && path == '/api/debug/userinfo') {
+      //   final pretty = const JsonEncoder.withIndent('  ').convert({
+      //     'userInfo': userInfo
+      //   });
+      //
+      //   request.response
+      //     ..statusCode = HttpStatus.ok
+      //     ..headers.contentType = ContentType.json
+      //     ..write(pretty)
+      //     ..close();
+      //
+      //   continue;
+      // }
 
 
       //-----------디버깅용-----------
