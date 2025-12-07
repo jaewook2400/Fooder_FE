@@ -215,7 +215,11 @@ class _HomeScreenState extends State<HomeScreen> {
               color: AppColors.white,
               borderRadius: BorderRadius.circular(22),
             ),
-            child: const Text("최근 추가된 레시피가 없습니다."),
+            child: const Text("최근 추가된 레시피가 없습니다.",
+              style: TextStyle(
+                color: AppColors.grey_5
+              )
+            ),
           );
         }
 

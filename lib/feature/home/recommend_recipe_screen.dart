@@ -61,9 +61,9 @@ class _RecommendRecipeScreenState extends State<RecommendRecipeScreen> {
                   const SizedBox(height: 30),
 
                   Text(
-                    "선택한 재료로 생성된 요리는..!",
+                    "선택한 재료로 생성된 요리는...",
                     style: AppTextStyles.pretendard_regular.copyWith(
-                      fontSize: 18,
+                      fontSize: 16,
                       color: AppColors.grey_4,
                     ),
                   ),
@@ -185,9 +185,9 @@ class _RecommendRecipeScreenState extends State<RecommendRecipeScreen> {
                 Text(
                   name,
                   style: AppTextStyles.pretendard_regular.copyWith(
-                    fontSize: 22,
+                    fontSize: 20,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.grey_4,
+                    color: AppColors.orange,
                   ),
                 ),
                 const SizedBox(height: 8),

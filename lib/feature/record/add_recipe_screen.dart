@@ -32,6 +32,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
   String _uploadedImageUrl = "";
   final ImagePicker _picker = ImagePicker();
   final String _fixedImageUrl = "https://www.urbanbrush.net/web/wp-content/uploads/edd/2021/07/urbanbrush-20210720213004046257.jpg";
+  final String _creamUrl = "https://mblogthumb-phinf.pstatic.net/MjAxOTA0MDFfMTE4/MDAxNTU0MTI3Njg2ODYy.4ktLwQM4zZWoywwWNMeAyihzYDtIH-3VXQgKwI3XwfMg.yzHKEmxdMQARf6XTssgPsNMTf30w9KRMUG-hN180ABQg.JPEG.dasoms2s2/IMG_0118.jpg?type=w800";
 
   bool _isLoading = false;
   bool _isImageUploading = false;
@@ -142,7 +143,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
       final Map<String, dynamic> requestData = {
         "name": name,
         "description": description,
-        "imageUrl": finalImageUrl,
+        "imageUrl": _creamUrl,
         "ingredient": ingredients,
         "steps": steps,
         "timeToCook": timeToCook,

@@ -138,12 +138,14 @@ class _PreferenceScreenState extends State<PreferenceScreen> {
   Widget build(BuildContext context) {
     if (isLoading) {
       return const Scaffold(
+        backgroundColor: AppColors.main,
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     if (isError) {
       return Scaffold(
+        backgroundColor: AppColors.main,
         body: Center(
           child: Text(
             "데이터를 불러오지 못했습니다.",
@@ -158,7 +160,7 @@ class _PreferenceScreenState extends State<PreferenceScreen> {
     final item = ingredientList[currentIndex];
 
     return Scaffold(
-      backgroundColor: AppColors.white,
+      backgroundColor: AppColors.main,
       body: Column(
         children: [
           const SizedBox(height: 60),
@@ -271,7 +273,7 @@ class _PreferenceScreenState extends State<PreferenceScreen> {
             width: 70,
             height: 70,
             decoration: const BoxDecoration(
-              color: AppColors.main,
+              color: AppColors.orange,
               shape: BoxShape.circle,
             ),
             child: Center(

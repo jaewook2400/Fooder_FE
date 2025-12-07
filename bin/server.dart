@@ -1,4 +1,3 @@
-import 'package:fooder_fe/local_database.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -162,11 +161,11 @@ Future<void> main() async {
         // 1. 가장 최근에 추가된 레시피 1개 조회 (recipe_id 기준 내림차순 정렬)
         final recipeRows = await conn.execute(
           Sql.named('''
-      SELECT recipe_id, name, time_to_cook, image_url
-      FROM recipes
-      ORDER BY recipe_id DESC
-      LIMIT 1
-    '''),
+            SELECT recipe_id, name, time_to_cook, image_url
+            FROM recipes
+            ORDER BY recipe_id DESC
+            LIMIT 1
+          '''),
         );
 
         if (recipeRows.isEmpty) {
@@ -243,10 +242,10 @@ Future<void> main() async {
         // 4-1) recipes 저장
         final insertedRecipe = await conn.execute(
           Sql.named('''
-      INSERT INTO recipes (name, time_to_cook, description, image_url)
-      VALUES (@n, @t, @d, @img)
-      RETURNING recipe_id, name, time_to_cook, description, image_url
-    '''),
+            INSERT INTO recipes (name, time_to_cook, description, image_url)
+            VALUES (@n, @t, @d, @img)
+            RETURNING recipe_id, name, time_to_cook, description, image_url
+          '''),
           parameters: {
             'n': recommended['name'],
             't': recommended['time_to_cook'],
@@ -1018,11 +1017,11 @@ Future<void> main() async {
 
 Future<Map<String, dynamic>> aiMadeRecipe(List<String> ingredient) async {
   return {
-    'name': 'AI 추천 계란볶음밥',
-    'time_to_cook': '5',
-    'description': '선호 재료 기반 자동 생성 레시피',
-    'ingredient': ['계란', '밥', '대파'],
-    'steps': ['1. 준비한다', '2. 볶는다'],
+    'name': '계란볶음밥',
+    'time_to_cook': '15',
+    'description': '중국집 가서 먹을 필요 없는 대존맛 계란볶음밥!',
+    'ingredient': ['계란', '밥', '대파', '마늘'],
+    'steps': ['1. 기름을 부어 달군 팬에 파와 마늘을 썰어 넣는다', '2. 어느 정도 색이 나오면 밥과 계란을 넣는다.', '3. 소금으로 간을 맞추고 타기 전에 불을 꺼 완성한다.'],
     'imageUrl': 'https://recipe1.ezmember.co.kr/cache/recipe/2018/04/04/833880e807106a8288be48259b19c4031.jpg'
   };
 }
